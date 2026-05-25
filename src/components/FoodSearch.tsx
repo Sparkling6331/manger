@@ -44,13 +44,17 @@ interface Props {
 
 async function searchOFF(query: string): Promise<OFFProduct[]> {
   const url =
-    `https://world.openfoodfacts.org/cgi/search.pl` +
-    `?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=8` +
+    `https://world.openfoodfacts.net/api/v2/search` +
+    `?q=${encodeURIComponent(query)}&page_size=10` +
     `&fields=product_name,brands,nutriments`
   const res = await fetch(url)
+  if (!res.ok) throw new Error(`Erreur ${res.status}`)
   const data = await res.json()
   return (data.products ?? []).filter(
-    (p: OFFProduct) => p.product_name && p.nutriments?.['energy-kcal_100g'] != null
+    (p: OFFProduct) =>
+      p.product_name?.trim() &&
+      ((p.nutriments?.['energy-kcal_100g'] ?? 0) > 0 ||
+       (p.nutriments?.proteins_100g ?? 0) > 0)
   )
 }
 
@@ -63,6 +67,7 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
   const [manualQty, setManualQty] = useState('100')
   const [offResults, setOffResults] = useState<OFFProduct[]>([])
   const [offLoading, setOffLoading] = useState(false)
+  const [offError, setOffError] = useState<string | null>(null)
 
   const foods = useLiveQuery(() => db.foods.toArray(), [])
   const recipes = useLiveQuery(() => db.recipes.toArray(), [])
@@ -111,9 +116,13 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
   async function handleOFFSearch() {
     if (!manual.name.trim()) return
     setOffLoading(true)
+    setOffError(null)
+    setOffResults([])
     setMode('off')
     try {
       setOffResults(await searchOFF(manual.name))
+    } catch (e) {
+      setOffError(e instanceof Error ? e.message : 'Erreur réseau')
     } finally {
       setOffLoading(false)
     }
@@ -341,7 +350,14 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
                   <span className="text-sm">Recherche en cours…</span>
                 </div>
               )}
-              {!offLoading && offResults.length === 0 && (
+              {!offLoading && offError && (
+                <div className="text-center py-8 px-4 space-y-3">
+                  <p className="text-sm text-red-500">Impossible de contacter Open Food Facts.</p>
+                  <p className="text-xs text-gray-400">{offError}</p>
+                  <button onClick={() => setMode('manual')} className="text-sm text-green-600 font-medium">← Saisir manuellement</button>
+                </div>
+              )}
+              {!offLoading && !offError && offResults.length === 0 && (
                 <div className="text-center py-8 space-y-3">
                   <p className="text-sm text-gray-400">Aucun produit trouvé.</p>
                   <button onClick={() => setMode('manual')} className="text-sm text-green-600 font-medium">← Saisir manuellement</button>
