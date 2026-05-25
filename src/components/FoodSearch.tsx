@@ -43,9 +43,10 @@ interface Props {
 }
 
 async function searchOFF(query: string): Promise<OFFProduct[]> {
+  // Append * for prefix matching in Elasticsearch (beur → beurre, beurre demi-sel…)
   const url =
     `https://world.openfoodfacts.net/api/v2/search` +
-    `?q=${encodeURIComponent(query)}&page_size=10` +
+    `?q=${encodeURIComponent(query.trim() + '*')}&page_size=10` +
     `&fields=product_name,brands,nutriments`
   const res = await fetch(url)
   if (!res.ok) throw new Error(`Erreur ${res.status}`)
