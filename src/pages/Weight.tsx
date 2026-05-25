@@ -120,32 +120,36 @@ export default function Weight() {
 
       {/* Add modal */}
       {showAdd && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-end">
-          <div className="bg-white w-full max-w-lg mx-auto rounded-t-2xl p-6 space-y-4">
-            <div className="flex justify-between items-center">
+        <>
+          <div className="fixed inset-0 z-[55] bg-black/50" onClick={() => setShowAdd(false)} />
+          <div className="fixed inset-0 z-[60] bg-white flex flex-col sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-80 sm:rounded-2xl sm:shadow-xl">
+            <div className="flex justify-between items-center px-4 py-4 border-b border-gray-100 shrink-0">
               <h2 className="font-semibold text-gray-800">Ajouter un relevé</h2>
               <button onClick={() => setShowAdd(false)}><X size={20} className="text-gray-400" /></button>
             </div>
-            <div className="flex items-center gap-3">
-              <input
-                autoFocus
-                type="number"
-                inputMode="decimal"
-                placeholder="0.0"
-                className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-2xl font-bold text-center"
-                value={weightInput}
-                onChange={e => setWeightInput(e.target.value)}
-              />
-              <span className="text-gray-400 text-lg">kg</span>
+            <div className="p-6 space-y-4">
+              <div className="flex items-center gap-3">
+                <input
+                  autoFocus
+                  type="number"
+                  inputMode="decimal"
+                  placeholder="0.0"
+                  className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-2xl font-bold text-center"
+                  value={weightInput}
+                  onChange={e => setWeightInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleAdd()}
+                />
+                <span className="text-gray-400 text-lg">kg</span>
+              </div>
+              <button
+                onClick={handleAdd}
+                className="w-full py-3 bg-green-600 text-white font-semibold rounded-xl"
+              >
+                Enregistrer
+              </button>
             </div>
-            <button
-              onClick={handleAdd}
-              className="w-full py-3 bg-green-600 text-white font-semibold rounded-xl"
-            >
-              Enregistrer
-            </button>
           </div>
-        </div>
+        </>
       )}
     </div>
   )
