@@ -44,12 +44,13 @@ interface Props {
 
 async function searchOFF(query: string): Promise<OFFProduct[]> {
   const q = query.trim()
-  // No wildcard — appending * causes match-all (4M+ results) on the OFF API.
-  // Use page_size=50 so the client-side product_name filter has enough candidates.
+  // CGI endpoint: searches product names only (not ingredients/categories),
+  // handles partial words ("beur" → "beurre") via substring matching.
   const url =
-    `https://world.openfoodfacts.net/api/v2/search` +
-    `?q=${encodeURIComponent(q)}&page_size=50` +
-    `&fields=product_name,brands,nutriments`
+    `https://world.openfoodfacts.org/cgi/search.pl` +
+    `?search_terms=${encodeURIComponent(q)}` +
+    `&search_simple=1&action=process&json=1` +
+    `&page_size=30&fields=product_name,brands,nutriments`
   const res = await fetch(url)
   if (!res.ok) throw new Error(`Erreur ${res.status}`)
   const data = await res.json()
