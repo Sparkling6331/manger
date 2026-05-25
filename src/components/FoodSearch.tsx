@@ -43,20 +43,26 @@ interface Props {
 }
 
 async function searchOFF(query: string): Promise<OFFProduct[]> {
-  // Append * for prefix matching in Elasticsearch (beur → beurre, beurre demi-sel…)
+  const q = query.trim()
+  // * enables prefix matching in Elasticsearch (beur → beurre…).
+  // Fetch more results because we filter by product_name client-side
+  // to exclude matches on ingredient/category fields.
   const url =
     `https://world.openfoodfacts.net/api/v2/search` +
-    `?q=${encodeURIComponent(query.trim() + '*')}&page_size=10` +
+    `?q=${encodeURIComponent(q + '*')}&page_size=30` +
     `&fields=product_name,brands,nutriments`
   const res = await fetch(url)
   if (!res.ok) throw new Error(`Erreur ${res.status}`)
   const data = await res.json()
-  return (data.products ?? []).filter(
-    (p: OFFProduct) =>
-      p.product_name?.trim() &&
-      ((p.nutriments?.['energy-kcal_100g'] ?? 0) > 0 ||
-       (p.nutriments?.proteins_100g ?? 0) > 0)
-  )
+  const qLower = q.toLowerCase()
+  return (data.products ?? [])
+    .filter(
+      (p: OFFProduct) =>
+        p.product_name?.toLowerCase().includes(qLower) &&
+        ((p.nutriments?.['energy-kcal_100g'] ?? 0) > 0 ||
+         (p.nutriments?.proteins_100g ?? 0) > 0)
+    )
+    .slice(0, 10)
 }
 
 export default function FoodSearch({ onAdd, onClose }: Props) {
