@@ -44,12 +44,11 @@ interface Props {
 
 async function searchOFF(query: string): Promise<OFFProduct[]> {
   const q = query.trim()
-  // * enables prefix matching in Elasticsearch (beur → beurre…).
-  // Fetch more results because we filter by product_name client-side
-  // to exclude matches on ingredient/category fields.
+  // No wildcard — appending * causes match-all (4M+ results) on the OFF API.
+  // Use page_size=50 so the client-side product_name filter has enough candidates.
   const url =
     `https://world.openfoodfacts.net/api/v2/search` +
-    `?q=${encodeURIComponent(q + '*')}&page_size=30` +
+    `?q=${encodeURIComponent(q)}&page_size=50` +
     `&fields=product_name,brands,nutriments`
   const res = await fetch(url)
   if (!res.ok) throw new Error(`Erreur ${res.status}`)
