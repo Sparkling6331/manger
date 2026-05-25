@@ -44,13 +44,17 @@ interface Props {
 
 async function searchOFF(query: string): Promise<OFFProduct[]> {
   const url =
-    `https://world.openfoodfacts.org/cgi/search.pl` +
-    `?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=8` +
+    `https://world.openfoodfacts.net/api/v2/search` +
+    `?q=${encodeURIComponent(query)}&page_size=10` +
     `&fields=product_name,brands,nutriments`
   const res = await fetch(url)
+  if (!res.ok) throw new Error(`Erreur ${res.status}`)
   const data = await res.json()
   return (data.products ?? []).filter(
-    (p: OFFProduct) => p.product_name && p.nutriments?.['energy-kcal_100g'] != null
+    (p: OFFProduct) =>
+      p.product_name?.trim() &&
+      ((p.nutriments?.['energy-kcal_100g'] ?? 0) > 0 ||
+       (p.nutriments?.proteins_100g ?? 0) > 0)
   )
 }
 
@@ -63,6 +67,7 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
   const [manualQty, setManualQty] = useState('100')
   const [offResults, setOffResults] = useState<OFFProduct[]>([])
   const [offLoading, setOffLoading] = useState(false)
+  const [offError, setOffError] = useState<string | null>(null)
 
   const foods = useLiveQuery(() => db.foods.toArray(), [])
   const recipes = useLiveQuery(() => db.recipes.toArray(), [])
@@ -79,6 +84,8 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
       .map(r => ({ type: 'recipe' as const, data: r }))
     return [...recipeResults, ...foodResults]
   }, [query, foods, recipes])
+
+  // ── handlers ──────────────────────────────────────────
 
   function handleSelect(item: FoodItem) {
     setSelected(item)
@@ -109,9 +116,13 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
   async function handleOFFSearch() {
     if (!manual.name.trim()) return
     setOffLoading(true)
+    setOffError(null)
+    setOffResults([])
     setMode('off')
     try {
       setOffResults(await searchOFF(manual.name))
+    } catch (e) {
+      setOffError(e instanceof Error ? e.message : 'Erreur réseau')
     } finally {
       setOffLoading(false)
     }
@@ -144,6 +155,8 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
     onClose()
   }
 
+  // ── preview for quantity mode ──────────────────────────
+
   const preview = useMemo(() => {
     if (!selected || !quantity) return null
     const qty = parseFloat(quantity)
@@ -162,11 +175,25 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
 
   const unitLabel = selected?.type === 'food' ? (selected.data.unit === 1 ? 'unité(s)' : 'g') : 'g'
 
-  return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center">
-      <div className="bg-white w-full max-w-lg mx-auto rounded-t-2xl sm:rounded-2xl max-h-[90dvh] flex flex-col overflow-hidden">
+  // ── render ─────────────────────────────────────────────
 
-        {/* SEARCH */}
+  return (
+    <>
+    {/* Backdrop — inset-0 dims the page; z-[55] sits above NavBar (z-50) */}
+    <div className="fixed inset-0 z-[55] bg-black/50" onClick={onClose} />
+
+    {/* Sheet — fixed bottom-0 so iOS pushes it above the keyboard like the NavBar */}
+    <div className={[
+      'fixed bottom-0 left-0 right-0 z-[60]',
+      'bg-white rounded-t-2xl',
+      'max-h-[85dvh] flex flex-col overflow-hidden',
+      // desktop: centered dialog
+      'sm:bottom-auto sm:left-1/2 sm:right-auto sm:top-1/2',
+      'sm:-translate-x-1/2 sm:-translate-y-1/2',
+      'sm:w-full sm:max-w-lg sm:rounded-2xl sm:shadow-xl sm:max-h-[90dvh]',
+    ].join(' ')}>
+
+        {/* ── SEARCH ── */}
         {mode === 'search' && (
           <>
             <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 shrink-0">
@@ -220,7 +247,7 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
           </>
         )}
 
-        {/* QUANTITY */}
+        {/* ── QUANTITY ── */}
         {mode === 'quantity' && selected && (
           <>
             <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 shrink-0">
@@ -257,7 +284,7 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
           </>
         )}
 
-        {/* MANUAL */}
+        {/* ── MANUAL ── */}
         {mode === 'manual' && (
           <>
             <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 shrink-0">
@@ -275,7 +302,7 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
                 className="w-full flex items-center justify-center gap-2 py-2.5 border border-dashed border-green-300 rounded-xl text-sm text-green-700 hover:bg-green-50">
                 <Search size={14} /> Rechercher sur Open Food Facts
               </button>
-              <p className="text-xs text-gray-400 text-center">Valeurs nutritionnelles pour 100g</p>
+              <p className="text-xs text-gray-400 text-center -mt-1">Valeurs nutritionnelles pour 100g</p>
               <div className="grid grid-cols-2 gap-3">
                 {[
                   { key: 'calories' as const, label: 'Calories', unit: 'kcal' },
@@ -320,7 +347,7 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
           </>
         )}
 
-        {/* OPEN FOOD FACTS */}
+        {/* ── OPEN FOOD FACTS ── */}
         {mode === 'off' && (
           <>
             <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 shrink-0">
@@ -335,7 +362,14 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
                   <span className="text-sm">Recherche en cours…</span>
                 </div>
               )}
-              {!offLoading && offResults.length === 0 && (
+              {!offLoading && offError && (
+                <div className="text-center py-8 px-4 space-y-3">
+                  <p className="text-sm text-red-500">Impossible de contacter Open Food Facts.</p>
+                  <p className="text-xs text-gray-400">{offError}</p>
+                  <button onClick={() => setMode('manual')} className="text-sm text-green-600 font-medium">← Saisir manuellement</button>
+                </div>
+              )}
+              {!offLoading && !offError && offResults.length === 0 && (
                 <div className="text-center py-8 space-y-3">
                   <p className="text-sm text-gray-400">Aucun produit trouvé.</p>
                   <button onClick={() => setMode('manual')} className="text-sm text-green-600 font-medium">← Saisir manuellement</button>
@@ -351,10 +385,10 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
                   <button key={i} onClick={() => applyOFF(p)}
                     className="w-full px-4 py-3 border-b border-gray-50 hover:bg-gray-50 text-left">
                     <p className="text-sm text-gray-800 truncate">
-                      {p.product_name}{p.brands ? ` — ${p.brands}` : ''}
+                      {p.product_name}{p.brands ? <span className="text-gray-400"> — {p.brands}</span> : ''}
                     </p>
                     <p className="text-xs text-gray-400">
-                      {cal} kcal · P:{prot}g · G:{carbs}g · L:{fats}g / 100g
+                      {cal} kcal · P:{prot}g · G:{carbs}g · L:{fats}g <span className="text-gray-300">/ 100g</span>
                     </p>
                   </button>
                 )
@@ -363,7 +397,7 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
           </>
         )}
 
-      </div>
     </div>
+    </>
   )
 }
