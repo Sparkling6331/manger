@@ -182,16 +182,23 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
     {/* Backdrop — inset-0 dims the page; z-[55] sits above NavBar (z-50) */}
     <div className="fixed inset-0 z-[55] bg-black/50" onClick={onClose} />
 
-    {/* Sheet — fixed bottom-0 so iOS pushes it above the keyboard like the NavBar */}
+    {/* Sheet — fixed bottom-0 so iOS pushes it above the keyboard like the NavBar.
+        h-dvh fills the entire visible viewport (shrinks with keyboard on iOS 15.4+). */}
     <div className={[
       'fixed bottom-0 left-0 right-0 z-[60]',
       'bg-white rounded-t-2xl',
-      'max-h-[85dvh] flex flex-col overflow-hidden',
-      // desktop: centered dialog
+      'h-dvh flex flex-col overflow-hidden',
+      // desktop: auto-height centered dialog
+      'sm:h-auto sm:max-h-[90dvh]',
       'sm:bottom-auto sm:left-1/2 sm:right-auto sm:top-1/2',
       'sm:-translate-x-1/2 sm:-translate-y-1/2',
-      'sm:w-full sm:max-w-lg sm:rounded-2xl sm:shadow-xl sm:max-h-[90dvh]',
+      'sm:w-full sm:max-w-lg sm:rounded-2xl sm:shadow-xl',
     ].join(' ')}>
+
+        {/* drag handle — mobile only */}
+        <div className="flex justify-center pt-2 pb-0 shrink-0 sm:hidden">
+          <div className="w-10 h-1 rounded-full bg-gray-200" />
+        </div>
 
         {/* ── SEARCH ── */}
         {mode === 'search' && (
