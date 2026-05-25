@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Plus, Trash2, ExternalLink } from 'lucide-react'
+import { Plus, Trash2, ExternalLink, BookmarkCheck, Eraser } from 'lucide-react'
 import { db } from '../db'
 import { today, formatDateLong, sumEntries } from '../utils'
 import { MEAL_META, MEAL_ORDER, type MealType, type MealEntry } from '../types'
@@ -11,6 +11,7 @@ const DATE = today()
 
 export default function Today() {
   const [addingMeal, setAddingMeal] = useState<MealType | null>(null)
+  const [saved, setSaved] = useState(false)
 
   const profile = useLiveQuery(() => db.profile.get(1))
   const entries = useLiveQuery(() => db.mealEntries.where('date').equals(DATE).toArray(), [])
@@ -29,6 +30,25 @@ export default function Today() {
 
   async function toggleExternal(entry: MealEntry) {
     await db.mealEntries.update(entry.id!, { isExternal: !entry.isExternal })
+  }
+
+  async function handleSaveHistory() {
+    if (!entries?.length) return
+    const t = sumEntries(entries)
+    const existing = await db.history.where('date').equals(DATE).first()
+    if (existing) {
+      await db.history.update(existing.id!, t)
+    } else {
+      await db.history.add({ date: DATE, ...t })
+    }
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2500)
+  }
+
+  async function handleClearToday() {
+    if (!window.confirm('Effacer tous les aliments du jour ?')) return
+    const ids = (entries ?? []).map(e => e.id!)
+    await db.mealEntries.bulkDelete(ids)
   }
 
   return (
@@ -102,6 +122,30 @@ export default function Today() {
           </div>
         )
       })}
+
+      {/* Day actions */}
+      {(entries ?? []).length > 0 && (
+        <div className="flex gap-2 pb-4">
+          <button
+            onClick={handleSaveHistory}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-semibold transition-colors ${
+              saved
+                ? 'bg-green-100 text-green-700'
+                : 'bg-green-600 text-white hover:bg-green-700'
+            }`}
+          >
+            <BookmarkCheck size={16} />
+            {saved ? 'Enregistré ✓' : 'Enregistrer dans l\'historique'}
+          </button>
+          <button
+            onClick={handleClearToday}
+            className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500 rounded-2xl text-sm font-semibold transition-colors"
+          >
+            <Eraser size={16} />
+            Effacer
+          </button>
+        </div>
+      )}
 
       {addingMeal && (
         <FoodSearch
