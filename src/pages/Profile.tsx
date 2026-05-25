@@ -85,6 +85,7 @@ export default function Profile() {
   useEffect(() => {
     if (profile) {
       setForm(profile)
+      // Detect which column is currently active based on saved goals
       if (profile.goals) {
         const age = calcAge(profile.birthDate)
         const needsLean = calcNeeds(
@@ -140,12 +141,16 @@ export default function Profile() {
       db.history.toArray(), db.weightEntries.toArray(), db.profile.toArray(),
     ])
     const date = new Date().toISOString().split('T')[0]
-    exportJSON({ foods, recipes, mealEntries, history, weightEntries, profile: profileData }, `manger-backup-${date}.json`)
+    exportJSON({ version: 1, exportDate: date, foods, recipes, mealEntries, history, weightEntries, profile: profileData }, `manger-${date}.json`)
   }
 
   async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
+    if (!window.confirm('Remplacer toutes les données locales par le fichier importé ?')) {
+      e.target.value = ''
+      return
+    }
     const text = await file.text()
     const data = JSON.parse(text)
     await db.transaction('rw', [db.foods, db.recipes, db.mealEntries, db.history, db.weightEntries, db.profile], async () => {
@@ -157,7 +162,7 @@ export default function Profile() {
       if (data.profile?.length) { await db.profile.clear(); await db.profile.bulkPut(data.profile) }
     })
     e.target.value = ''
-    alert('Données importées avec succès !')
+    alert('Importé avec succès !')
   }
 
   if (!profile) return <div className="p-4 text-gray-400">Chargement…</div>
@@ -268,16 +273,20 @@ export default function Profile() {
 
       {/* Sync */}
       <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
-        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Sauvegarde Google Drive</h2>
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Synchronisation Mac ↔ iPhone</h2>
         <p className="text-xs text-gray-400">
-          Exporte toutes les données en JSON → dépose dans Google Drive. Importe pour restaurer.
+          Toutes les données sont exportées (aliments, repas, historique, poids, profil).
         </p>
+        <ol className="text-xs text-gray-400 list-decimal list-inside space-y-0.5">
+          <li>Sur l’appareil source → <strong className="text-gray-600">Exporter</strong> → sauvegarder dans iCloud Drive</li>
+          <li>Sur l’autre appareil → <strong className="text-gray-600">Importer</strong> → sélectionner le fichier</li>
+        </ol>
         <div className="flex gap-3">
           <button onClick={handleExport}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-700">
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 hover:bg-gray-100 transition-colors">
             <Download size={15} /> Exporter
           </button>
-          <label className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-700 cursor-pointer">
+          <label className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors">
             <Upload size={15} /> Importer
             <input type="file" accept=".json" className="hidden" onChange={handleImport} />
           </label>
