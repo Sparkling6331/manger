@@ -178,8 +178,20 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
   // ── render ─────────────────────────────────────────────────
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center">
-      <div className="bg-white w-full max-w-lg mx-auto rounded-t-2xl sm:rounded-2xl max-h-[90dvh] flex flex-col overflow-hidden">
+    <>
+    {/* Backdrop — inset-0 dims the page; z-[55] sits above NavBar (z-50) */}
+    <div className="fixed inset-0 z-[55] bg-black/50" onClick={onClose} />
+
+    {/* Sheet — fixed bottom-0 so iOS pushes it above the keyboard like the NavBar */}
+    <div className={[
+      'fixed bottom-0 left-0 right-0 z-[60]',
+      'bg-white rounded-t-2xl',
+      'max-h-[85dvh] flex flex-col overflow-hidden',
+      // desktop: centered dialog
+      'sm:bottom-auto sm:left-1/2 sm:right-auto sm:top-1/2',
+      'sm:-translate-x-1/2 sm:-translate-y-1/2',
+      'sm:w-full sm:max-w-lg sm:rounded-2xl sm:shadow-xl sm:max-h-[90dvh]',
+    ].join(' ')}>
 
         {/* ── SEARCH ── */}
         {mode === 'search' && (
@@ -385,7 +397,7 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
           </>
         )}
 
-      </div>
     </div>
+    </>
   )
 }
