@@ -47,7 +47,7 @@ async function searchOFF(query: string): Promise<OFFProduct[]> {
   // CGI endpoint: searches product names only (not ingredients/categories),
   // handles partial words ("beur" → "beurre") via substring matching.
   const url =
-    `https://world.openfoodfacts.org/cgi/search.pl` +
+    `https://fr.openfoodfacts.org/cgi/search.pl` +
     `?search_terms=${encodeURIComponent(q + '*')}` +
     `&search_simple=1&action=process&json=1` +
     `&page_size=30&fields=product_name,brands,nutriments`
