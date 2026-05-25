@@ -18,10 +18,11 @@ export default defineConfig({
         background_color: '#f0fdf4',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/',
+        start_url: '/manger/',
         icons: [
-          { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+          { src: '/manger/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+          { src: '/manger/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/manger/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
         ],
       },
       workbox: {

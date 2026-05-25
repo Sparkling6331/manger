@@ -19,6 +19,12 @@ jobs:
           node-version: 20
           cache: npm
 
+      - name: Install Pillow for icon generation
+        run: pip install pillow
+
+      - name: Generate app icons
+        run: python3 scripts/gen-icons.py
+
       - run: npm ci
 
       - run: npm run build
