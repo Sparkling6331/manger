@@ -44,21 +44,19 @@ interface Props {
 
 async function searchOFF(query: string): Promise<OFFProduct[]> {
   const q = query.trim()
-  // * enables prefix matching in Elasticsearch (beur → beurre…).
-  // Fetch more results because we filter by product_name client-side
-  // to exclude matches on ingredient/category fields.
+  // CGI endpoint with prefix wildcard — searches product names only
   const url =
-    `https://world.openfoodfacts.net/api/v2/search` +
-    `?q=${encodeURIComponent(q + '*')}&page_size=30` +
-    `&fields=product_name,brands,nutriments`
+    `https://world.openfoodfacts.org/cgi/search.pl` +
+    `?search_terms=${encodeURIComponent(q + '*')}` +
+    `&search_simple=1&action=process&json=1` +
+    `&page_size=30&fields=product_name,brands,nutriments`
   const res = await fetch(url)
   if (!res.ok) throw new Error(`Erreur ${res.status}`)
   const data = await res.json()
-  const qLower = q.toLowerCase()
   return (data.products ?? [])
     .filter(
       (p: OFFProduct) =>
-        p.product_name?.toLowerCase().includes(qLower) &&
+        p.product_name &&
         ((p.nutriments?.['energy-kcal_100g'] ?? 0) > 0 ||
          (p.nutriments?.proteins_100g ?? 0) > 0)
     )
@@ -127,7 +125,27 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
     setOffResults([])
     setMode('off')
     try {
-      setOffResults(await searchOFF(manual.name))
+      const localCount = await db.offProducts.count()
+      if (localCount > 0) {
+        const q = manual.name.trim().toLowerCase()
+        const local = await db.offProducts
+          .where('nameLower')
+          .startsWith(q)
+          .limit(20)
+          .toArray()
+        setOffResults(local.map(p => ({
+          product_name: p.name,
+          brands: p.brands,
+          nutriments: {
+            'energy-kcal_100g': p.calories,
+            proteins_100g: p.proteins,
+            carbohydrates_100g: p.carbs,
+            fat_100g: p.fats,
+          },
+        })))
+      } else {
+        setOffResults(await searchOFF(manual.name))
+      }
     } catch (e) {
       setOffError(e instanceof Error ? e.message : 'Erreur réseau')
     } finally {

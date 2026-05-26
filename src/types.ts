@@ -70,6 +70,17 @@ export interface WeightEntry {
   weight: number;
 }
 
+export interface OffProduct {
+  id?: number
+  name: string
+  nameLower: string
+  brands?: string
+  calories: number
+  proteins: number
+  carbs: number
+  fats: number
+}
+
 export interface UserProfile {
   id?: number;
   birthDate: string;
