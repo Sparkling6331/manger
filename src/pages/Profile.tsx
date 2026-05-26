@@ -1,9 +1,21 @@
 import { useState, useEffect } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Save, Download, Upload, Check } from 'lucide-react'
+import { Save, Download, Upload, Check, Database, RefreshCw } from 'lucide-react'
 import { db } from '../db'
 import { exportJSON } from '../utils'
+import { importOFFDatabase, type ImportProgress } from '../utils/offImport'
 import type { UserProfile } from '../types'
+
+const OFF_META_KEY = 'offLastSync'
+
+interface OffMeta { date: string; count: number }
+
+function loadOffMeta(): OffMeta | null {
+  try { return JSON.parse(localStorage.getItem(OFF_META_KEY) ?? 'null') } catch { return null }
+}
+function saveOffMeta(m: OffMeta) {
+  localStorage.setItem(OFF_META_KEY, JSON.stringify(m))
+}
 
 const ACTIVITY_OPTIONS = [
   { value: 1.37, label: "Pas d'activité physique / emploi sédentaire" },
@@ -81,6 +93,10 @@ export default function Profile() {
   const [form, setForm] = useState<Partial<UserProfile>>({})
   const [saved, setSaved] = useState(false)
   const [activeCol, setActiveCol] = useState<'actual' | 'lean'>('lean')
+  const [offMeta, setOffMeta] = useState<OffMeta | null>(loadOffMeta)
+  const [importing, setImporting] = useState(false)
+  const [importProgress, setImportProgress] = useState<ImportProgress | null>(null)
+  const [importError, setImportError] = useState<string | null>(null)
 
   useEffect(() => {
     if (profile) {
@@ -124,6 +140,23 @@ export default function Profile() {
         fats: needs.fats,
       },
     }))
+  }
+
+  async function handleImportOFF() {
+    setImporting(true)
+    setImportError(null)
+    setImportProgress({ bytesLoaded: 0, totalBytes: 0, recordCount: 0 })
+    try {
+      const count = await importOFFDatabase(p => setImportProgress({ ...p }))
+      const meta: OffMeta = { date: new Date().toLocaleDateString('fr-FR'), count }
+      saveOffMeta(meta)
+      setOffMeta(meta)
+    } catch (e) {
+      setImportError(e instanceof Error ? e.message : 'Erreur inconnue')
+    } finally {
+      setImporting(false)
+      setImportProgress(null)
+    }
   }
 
   async function handleSave() {
@@ -266,6 +299,51 @@ export default function Profile() {
         <Save size={16} />
         {saved ? 'Enregistré !' : 'Enregistrer'}
       </button>
+
+      {/* OFF local database */}
+      <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Base Open Food Facts locale</h2>
+        {offMeta ? (
+          <p className="text-xs text-gray-400">
+            {offMeta.count.toLocaleString('fr-FR')} produits · mis à jour le {offMeta.date}
+          </p>
+        ) : (
+          <p className="text-xs text-gray-400">Base non téléchargée — la recherche utilisera l'API internet.</p>
+        )}
+        {importing && importProgress && (
+          <div className="space-y-1.5">
+            <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+              <div
+                className="bg-green-500 h-1.5 rounded-full transition-all duration-300"
+                style={{
+                  width: importProgress.totalBytes > 0
+                    ? `${Math.min(100, Math.round(importProgress.bytesLoaded / importProgress.totalBytes * 100))}%`
+                    : '100%',
+                  animation: importProgress.totalBytes === 0 ? 'pulse 1.5s infinite' : undefined,
+                }}
+              />
+            </div>
+            <p className="text-xs text-gray-400 text-center">
+              {importProgress.recordCount.toLocaleString('fr-FR')} produits importés…
+              {importProgress.totalBytes > 0 && (
+                <> · {Math.round(importProgress.bytesLoaded / 1024 / 1024)} / {Math.round(importProgress.totalBytes / 1024 / 1024)} Mo</>
+              )}
+            </p>
+          </div>
+        )}
+        {importError && (
+          <p className="text-xs text-red-500">{importError}</p>
+        )}
+        {!importing && (
+          <button
+            onClick={handleImportOFF}
+            className="flex items-center justify-center gap-2 w-full py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+          >
+            {offMeta ? <RefreshCw size={15} /> : <Database size={15} />}
+            {offMeta ? 'Mettre à jour la base' : 'Télécharger la base OFF'}
+          </button>
+        )}
+      </div>
 
       {/* Sync */}
       <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">

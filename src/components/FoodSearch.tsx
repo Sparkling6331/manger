@@ -126,7 +126,27 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
     setOffResults([])
     setMode('off')
     try {
-      setOffResults(await searchOFF(manual.name))
+      const localCount = await db.offProducts.count()
+      if (localCount > 0) {
+        const q = manual.name.trim().toLowerCase()
+        const local = await db.offProducts
+          .where('nameLower')
+          .startsWith(q)
+          .limit(20)
+          .toArray()
+        setOffResults(local.map(p => ({
+          product_name: p.name,
+          brands: p.brands,
+          nutriments: {
+            'energy-kcal_100g': p.calories,
+            proteins_100g: p.proteins,
+            carbohydrates_100g: p.carbs,
+            fat_100g: p.fats,
+          },
+        })))
+      } else {
+        setOffResults(await searchOFF(manual.name))
+      }
     } catch (e) {
       setOffError(e instanceof Error ? e.message : 'Erreur réseau')
     } finally {
