@@ -7,6 +7,8 @@ import { importOFFFile, type ImportProgress } from '../utils/offImport'
 import type { UserProfile } from '../types'
 
 const OFF_META_KEY = 'offLastSync'
+export const OFF_LIMIT_KEY = 'offResultsLimit'
+export const OFF_LIMIT_DEFAULT = 10
 interface OffMeta { date: string; count: number }
 function loadOffMeta(): OffMeta | null {
   try { return JSON.parse(localStorage.getItem(OFF_META_KEY) ?? 'null') } catch { return null }
@@ -90,6 +92,7 @@ export default function Profile() {
   const [saved, setSaved] = useState(false)
   const [activeCol, setActiveCol] = useState<'actual' | 'lean'>('lean')
   const [offMeta, setOffMeta] = useState<OffMeta | null>(loadOffMeta)
+  const [offLimit, setOffLimit] = useState(() => parseInt(localStorage.getItem(OFF_LIMIT_KEY) ?? String(OFF_LIMIT_DEFAULT)))
   const [importing, setImporting] = useState(false)
   const [importProgress, setImportProgress] = useState<ImportProgress | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
@@ -313,6 +316,19 @@ export default function Profile() {
         ) : (
           <p className="text-xs text-gray-400">Base non importée — la recherche utilisera l'API internet.</p>
         )}
+        <div className="flex items-center gap-3">
+          <label className="text-xs text-gray-500 shrink-0">Résultats affichés</label>
+          <input
+            type="number" inputMode="numeric" min="5" max="50"
+            className="w-20 border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-center"
+            value={offLimit}
+            onChange={e => {
+              const v = Math.min(50, Math.max(5, parseInt(e.target.value) || OFF_LIMIT_DEFAULT))
+              setOffLimit(v)
+              localStorage.setItem(OFF_LIMIT_KEY, String(v))
+            }}
+          />
+        </div>
         <ol className="text-xs text-gray-400 list-decimal list-inside space-y-0.5">
           <li>Allez sur <strong className="text-gray-600">fr.openfoodfacts.org/data</strong></li>
           <li>Téléchargez le fichier <strong className="text-gray-600">.csv.gz</strong> (liste des produits)</li>

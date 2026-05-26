@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { X, Search, Plus, ChevronLeft, Loader2 } from 'lucide-react'
 import { db } from '../db'
 import { calcNutrition, round } from '../utils'
+import { OFF_LIMIT_KEY, OFF_LIMIT_DEFAULT } from '../pages/Profile'
 import type { Food, Recipe } from '../types'
 
 type FoodItem = { type: 'food'; data: Food } | { type: 'recipe'; data: Recipe }
@@ -42,14 +43,13 @@ interface Props {
   onClose: () => void
 }
 
-async function searchOFF(query: string): Promise<OFFProduct[]> {
+async function searchOFF(query: string, limit: number): Promise<OFFProduct[]> {
   const q = query.trim()
-  // CGI endpoint with prefix wildcard — searches product names only
   const url =
     `https://world.openfoodfacts.org/cgi/search.pl` +
     `?search_terms=${encodeURIComponent(q + '*')}` +
     `&search_simple=1&action=process&json=1` +
-    `&page_size=30&fields=product_name,brands,nutriments`
+    `&page_size=${limit}&fields=product_name,brands,nutriments`
   const res = await fetch(url)
   if (!res.ok) throw new Error(`Erreur ${res.status}`)
   const data = await res.json()
@@ -60,7 +60,7 @@ async function searchOFF(query: string): Promise<OFFProduct[]> {
         ((p.nutriments?.['energy-kcal_100g'] ?? 0) > 0 ||
          (p.nutriments?.proteins_100g ?? 0) > 0)
     )
-    .slice(0, 10)
+    .slice(0, limit)
 }
 
 export default function FoodSearch({ onAdd, onClose }: Props) {
@@ -125,13 +125,14 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
     setOffResults([])
     setMode('off')
     try {
+      const limit = parseInt(localStorage.getItem(OFF_LIMIT_KEY) ?? String(OFF_LIMIT_DEFAULT))
       const localCount = await db.offProducts.count()
       if (localCount > 0) {
         const q = manual.name.trim().toLowerCase()
         const local = await db.offProducts
           .where('nameLower')
           .startsWith(q)
-          .limit(20)
+          .limit(limit)
           .toArray()
         setOffResults(local.map(p => ({
           product_name: p.name,
@@ -144,7 +145,7 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
           },
         })))
       } else {
-        setOffResults(await searchOFF(manual.name))
+        setOffResults(await searchOFF(manual.name, limit))
       }
     } catch (e) {
       setOffError(e instanceof Error ? e.message : 'Erreur réseau')
