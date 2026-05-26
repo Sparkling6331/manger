@@ -141,7 +141,7 @@ export default function Profile() {
   async function handleImportOFF() {
     setImporting(true)
     setImportError(null)
-    setImportProgress({ bytesLoaded: 0, totalBytes: 0, recordCount: 0 })
+    setImportProgress({ pagesLoaded: 0, totalPages: 0, recordCount: 0 })
     try {
       const count = await importOFFDatabase(p => setImportProgress({ ...p }))
       const meta: OffMeta = { date: new Date().toLocaleDateString('fr-FR'), count }
@@ -316,16 +316,16 @@ export default function Profile() {
               <div
                 className="bg-green-500 h-1.5 rounded-full transition-all duration-300"
                 style={{
-                  width: importProgress.totalBytes > 0
-                    ? `${Math.min(100, Math.round(importProgress.bytesLoaded / importProgress.totalBytes * 100))}%`
-                    : '50%',
+                  width: importProgress.totalPages > 0
+                    ? `${Math.min(100, Math.round(importProgress.pagesLoaded / importProgress.totalPages * 100))}%`
+                    : '10%',
                 }}
               />
             </div>
             <p className="text-xs text-gray-400 text-center">
               {importProgress.recordCount.toLocaleString('fr-FR')} produits importés
-              {importProgress.totalBytes > 0 && (
-                <> · {Math.round(importProgress.bytesLoaded / 1024 / 1024)} / {Math.round(importProgress.totalBytes / 1024 / 1024)} Mo</>
+              {importProgress.totalPages > 0 && (
+                <> · page {importProgress.pagesLoaded} / {importProgress.totalPages}</>
               )}
             </p>
           </div>

@@ -1,109 +1,81 @@
 import { db } from '../db'
 import type { OffProduct } from '../types'
 
-export const OFF_CSV_URL =
-  'https://static.openfoodfacts.org/data/fr.openfoodfacts.org.products.csv.gz'
-
-const BATCH_SIZE = 5000
+const PAGE_SIZE = 1000
+const MAX_PAGES = 100  // 100 000 produits max
 
 export interface ImportProgress {
-  bytesLoaded: number
-  totalBytes: number
+  pagesLoaded: number
+  totalPages: number
   recordCount: number
 }
 
 export async function importOFFDatabase(
   onProgress: (p: ImportProgress) => void
 ): Promise<number> {
-  const res = await fetch(OFF_CSV_URL)
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
-
-  const totalBytes = parseInt(res.headers.get('content-length') ?? '0') || 0
-  let bytesLoaded = 0
-  let recordCount = 0
-
-  const countingTransform = new TransformStream<Uint8Array, Uint8Array>({
-    transform(chunk, ctrl) {
-      bytesLoaded += chunk.byteLength
-      ctrl.enqueue(chunk)
-    },
-  })
-
-  const reader = res.body!
-    .pipeThrough(countingTransform)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .pipeThrough(new DecompressionStream('gzip') as any)
-    .getReader()
-
-  const decoder = new TextDecoder()
-  let buffer = ''
-  let headers: string[] | null = null
-  let colName = -1, colBrands = -1, colKcal = -1, colProt = -1, colCarbs = -1, colFat = -1
-  let batch: OffProduct[] = []
-
   await db.offProducts.clear()
 
-  async function flush() {
-    if (batch.length === 0) return
-    await db.offProducts.bulkPut(batch)
-    recordCount += batch.length
-    batch = []
-    onProgress({ bytesLoaded, totalBytes, recordCount })
-  }
+  let recordCount = 0
+  let totalPages = MAX_PAGES
 
-  function parseLine(line: string) {
-    if (!line.trim()) return
-    const cols = line.split('\t')
+  for (let page = 1; page <= MAX_PAGES; page++) {
+    const url =
+      `https://world.openfoodfacts.org/cgi/search.pl` +
+      `?action=process&json=1` +
+      `&page_size=${PAGE_SIZE}&page=${page}` +
+      `&tagtype_0=countries&tag_contains_0=contains&tag_0=france` +
+      `&fields=product_name,brands,nutriments`
 
-    if (!headers) {
-      headers = cols
-      colName = headers.indexOf('product_name')
-      colBrands = headers.indexOf('brands')
-      colKcal = headers.indexOf('energy-kcal_100g')
-      colProt = headers.indexOf('proteins_100g')
-      colCarbs = headers.indexOf('carbohydrates_100g')
-      colFat = headers.indexOf('fat_100g')
-      return
+    const res = await fetch(url)
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = await res.json()
+
+    if (page === 1 && data.count) {
+      totalPages = Math.min(MAX_PAGES, Math.ceil(data.count / PAGE_SIZE))
     }
 
-    const name = cols[colName]?.trim()
-    if (!name || name.length < 2) return
-
-    const calories = parseFloat(cols[colKcal]) || 0
-    const proteins = parseFloat(cols[colProt]) || 0
-    const carbs = parseFloat(cols[colCarbs]) || 0
-    const fats = parseFloat(cols[colFat]) || 0
-
-    if (calories === 0 && proteins === 0) return
-
-    batch.push({
-      name,
-      nameLower: name.toLowerCase(),
-      brands: cols[colBrands]?.trim() || undefined,
-      calories: Math.round(calories),
-      proteins: Math.round(proteins * 10) / 10,
-      carbs: Math.round(carbs * 10) / 10,
-      fats: Math.round(fats * 10) / 10,
-    })
-  }
-
-  try {
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-
-      buffer += decoder.decode(value as Uint8Array, { stream: true })
-      let nl: number
-      while ((nl = buffer.indexOf('\n')) >= 0) {
-        parseLine(buffer.slice(0, nl))
-        buffer = buffer.slice(nl + 1)
-        if (batch.length >= BATCH_SIZE) await flush()
+    const products: Array<{
+      product_name?: string
+      brands?: string
+      nutriments?: {
+        'energy-kcal_100g'?: number
+        proteins_100g?: number
+        carbohydrates_100g?: number
+        fat_100g?: number
       }
+    }> = data.products ?? []
+
+    if (products.length === 0) break
+
+    const batch: OffProduct[] = products
+      .filter(p => {
+        const name = p.product_name?.trim()
+        if (!name || name.length < 2) return false
+        const n = p.nutriments ?? {}
+        return (n['energy-kcal_100g'] ?? 0) > 0 || (n.proteins_100g ?? 0) > 0
+      })
+      .map(p => {
+        const n = p.nutriments ?? {}
+        const name = p.product_name!.trim()
+        return {
+          name,
+          nameLower: name.toLowerCase(),
+          brands: p.brands?.trim() || undefined,
+          calories: Math.round(n['energy-kcal_100g'] ?? 0),
+          proteins: Math.round((n.proteins_100g ?? 0) * 10) / 10,
+          carbs: Math.round((n.carbohydrates_100g ?? 0) * 10) / 10,
+          fats: Math.round((n.fat_100g ?? 0) * 10) / 10,
+        }
+      })
+
+    if (batch.length > 0) {
+      await db.offProducts.bulkPut(batch)
+      recordCount += batch.length
     }
-    if (buffer.trim()) parseLine(buffer)
-    await flush()
-  } finally {
-    reader.cancel()
+
+    onProgress({ pagesLoaded: page, totalPages, recordCount })
+
+    if (products.length < PAGE_SIZE) break
   }
 
   return recordCount
