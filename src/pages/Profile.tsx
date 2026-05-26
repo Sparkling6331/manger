@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Save, Download, Upload, Check, Database, RefreshCw } from 'lucide-react'
 import { db } from '../db'
 import { exportJSON } from '../utils'
-import { importOFFDatabase, type ImportProgress } from '../utils/offImport'
+import { importOFFFile, type ImportProgress } from '../utils/offImport'
 import type { UserProfile } from '../types'
 
 const OFF_META_KEY = 'offLastSync'
@@ -138,12 +138,15 @@ export default function Profile() {
     }))
   }
 
-  async function handleImportOFF() {
+  async function handleImportOFF(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
     setImporting(true)
     setImportError(null)
     setImportProgress({ pagesLoaded: 0, totalPages: 0, recordCount: 0 })
     try {
-      const count = await importOFFDatabase(p => setImportProgress({ ...p }))
+      const count = await importOFFFile(file, p => setImportProgress({ ...p }))
       const meta: OffMeta = { date: new Date().toLocaleDateString('fr-FR'), count }
       saveOffMeta(meta)
       setOffMeta(meta)
@@ -308,8 +311,13 @@ export default function Profile() {
             {offMeta.count.toLocaleString('fr-FR')} produits · mis à jour le {offMeta.date}
           </p>
         ) : (
-          <p className="text-xs text-gray-400">Base non téléchargée — la recherche utilisera l'API internet.</p>
+          <p className="text-xs text-gray-400">Base non importée — la recherche utilisera l'API internet.</p>
         )}
+        <ol className="text-xs text-gray-400 list-decimal list-inside space-y-0.5">
+          <li>Allez sur <strong className="text-gray-600">fr.openfoodfacts.org/data</strong></li>
+          <li>Téléchargez le fichier <strong className="text-gray-600">.csv.gz</strong> (liste des produits)</li>
+          <li>Sélectionnez-le ci-dessous</li>
+        </ol>
         {importing && importProgress && (
           <div className="space-y-1.5">
             <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
@@ -323,22 +331,17 @@ export default function Profile() {
               />
             </div>
             <p className="text-xs text-gray-400 text-center">
-              {importProgress.recordCount.toLocaleString('fr-FR')} produits importés
-              {importProgress.totalPages > 0 && (
-                <> · page {importProgress.pagesLoaded} / {importProgress.totalPages}</>
-              )}
+              {importProgress.recordCount.toLocaleString('fr-FR')} produits importés…
             </p>
           </div>
         )}
         {importError && <p className="text-xs text-red-500">{importError}</p>}
         {!importing && (
-          <button
-            onClick={handleImportOFF}
-            className="flex items-center justify-center gap-2 w-full py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-          >
+          <label className="flex items-center justify-center gap-2 w-full py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer">
             {offMeta ? <RefreshCw size={15} /> : <Database size={15} />}
-            {offMeta ? 'Mettre à jour la base' : 'Télécharger la base OFF'}
-          </button>
+            {offMeta ? 'Mettre à jour la base' : 'Importer le fichier OFF'}
+            <input type="file" accept=".gz,.csv" className="hidden" onChange={handleImportOFF} />
+          </label>
         )}
       </div>
 
