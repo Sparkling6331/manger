@@ -109,13 +109,11 @@ export default function Today() {
           type="date"
           className="sr-only"
           value={currentDate}
-          max={today()}
           onChange={e => e.target.value && setCurrentDate(e.target.value)}
         />
         <button
           onClick={() => navigateDate(1)}
-          disabled={currentDate >= today()}
-          className="p-1.5 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          className="p-1.5 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
         >
           <ChevronRight size={20} />
         </button>
