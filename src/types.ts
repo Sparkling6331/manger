@@ -71,7 +71,6 @@ export interface WeightEntry {
 }
 
 export interface OffProduct {
-  id?: number
   name: string
   nameLower: string
   brands?: string
