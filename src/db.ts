@@ -8,7 +8,7 @@ class MangerDB extends Dexie {
   history!: Table<HistoryEntry, number>;
   weightEntries!: Table<WeightEntry, number>;
   profile!: Table<UserProfile, number>;
-  offProducts!: Table<OffProduct, string>;
+  offProducts!: Table<OffProduct, number>;
 
   constructor() {
     super('MangerDB');
@@ -29,9 +29,9 @@ class MangerDB extends Dexie {
       profile: '++id',
       offProducts: '++id, nameLower',
     });
-    // v3: nameLower as primary key — allows upsert without clear()
+    // v3: reverts broken primary-key migration — restores ++id schema
     this.version(3).stores({
-      offProducts: 'nameLower',
+      offProducts: '++id, nameLower',
     }).upgrade(tx => tx.table('offProducts').clear());
   }
 }

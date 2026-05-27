@@ -13,8 +13,10 @@ export async function importOFFFile(
   file: File,
   onProgress: (p: ImportProgress) => void
 ): Promise<number> {
-  // No clear() upfront — we upsert by nameLower (primary key).
-  // This avoids a massive delete transaction that can crash IndexedDB on iOS.
+  // Collect existing IDs before import — we'll delete them AFTER the new
+  // data is safely inserted (avoids a massive upfront DELETE that crashes
+  // the IndexedDB connection on iOS).
+  const oldIds = (await db.offProducts.toCollection().primaryKeys()) as number[]
 
   const isGzip = file.name.endsWith('.gz')
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -31,14 +33,13 @@ export async function importOFFFile(
   let batch: OffProduct[] = []
   let recordCount = 0
   let linesRead = 0
-  const totalLines = Math.round(file.size / 500) // rough estimate
+  const totalLines = Math.round(file.size / 500)
 
   async function flush() {
     if (batch.length === 0) return
-    await db.offProducts.bulkPut(batch)
+    await db.offProducts.bulkAdd(batch)
     recordCount += batch.length
     batch = []
-    // Yield to the browser between batches to avoid memory pressure
     await new Promise(r => setTimeout(r, 0))
     onProgress({ pagesLoaded: linesRead, totalPages: totalLines, recordCount })
   }
@@ -97,6 +98,12 @@ export async function importOFFFile(
     await flush()
   } finally {
     reader.cancel()
+  }
+
+  // Delete old records in chunks AFTER successful import
+  for (let i = 0; i < oldIds.length; i += 2000) {
+    await db.offProducts.bulkDelete(oldIds.slice(i, i + 2000))
+    await new Promise(r => setTimeout(r, 0))
   }
 
   return recordCount
