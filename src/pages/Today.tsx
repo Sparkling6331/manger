@@ -1,29 +1,37 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Plus, Trash2, ExternalLink, BookmarkCheck, Eraser, X } from 'lucide-react'
+import { Plus, Trash2, ExternalLink, BookmarkCheck, Eraser, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { db } from '../db'
 import { today, formatDateLong, sumEntries, round } from '../utils'
 import { MEAL_META, MEAL_ORDER, type MealType, type MealEntry } from '../types'
 import MacroProgress from '../components/MacroProgress'
 import FoodSearch from '../components/FoodSearch'
 
-const DATE = today()
-
 export default function Today() {
+  const [currentDate, setCurrentDate] = useState(today)
   const [addingMeal, setAddingMeal] = useState<MealType | null>(null)
   const [saved, setSaved] = useState(false)
   const [editingEntry, setEditingEntry] = useState<MealEntry | null>(null)
   const [editQty, setEditQty] = useState('')
   const [replacingEntry, setReplacingEntry] = useState<MealEntry | null>(null)
+  const dateInputRef = useRef<HTMLInputElement>(null)
 
   const profile = useLiveQuery(() => db.profile.get(1))
-  const entries = useLiveQuery(() => db.mealEntries.where('date').equals(DATE).toArray(), [])
+  const entries = useLiveQuery(() => db.mealEntries.where('date').equals(currentDate).toArray(), [currentDate])
 
   const totals = sumEntries(entries ?? [])
   const goals = profile?.goals ?? { calories: 2542, proteins: 95, fats: 99, carbs: 318 }
 
+  function navigateDate(delta: number) {
+    setCurrentDate(prev => {
+      const d = new Date(prev)
+      d.setDate(d.getDate() + delta)
+      return d.toISOString().slice(0, 10)
+    })
+  }
+
   async function handleAddEntry(meal: MealType, data: Omit<MealEntry, 'id' | 'date' | 'meal'>) {
-    await db.mealEntries.add({ ...data, date: DATE, meal })
+    await db.mealEntries.add({ ...data, date: currentDate, meal })
     setAddingMeal(null)
   }
 
@@ -53,7 +61,7 @@ export default function Today() {
 
   async function handleReplaceEntry(old: MealEntry, data: Omit<MealEntry, 'id' | 'date' | 'meal'>) {
     await db.mealEntries.delete(old.id!)
-    await db.mealEntries.add({ ...data, date: DATE, meal: old.meal })
+    await db.mealEntries.add({ ...data, date: currentDate, meal: old.meal })
     setReplacingEntry(null)
   }
 
@@ -64,11 +72,11 @@ export default function Today() {
   async function handleSaveHistory() {
     if (!entries?.length) return
     const t = sumEntries(entries)
-    const existing = await db.history.where('date').equals(DATE).first()
+    const existing = await db.history.where('date').equals(currentDate).first()
     if (existing) {
       await db.history.update(existing.id!, t)
     } else {
-      await db.history.add({ date: DATE, ...t })
+      await db.history.add({ date: currentDate, ...t })
     }
     setSaved(true)
     setTimeout(() => setSaved(false), 2500)
@@ -83,8 +91,34 @@ export default function Today() {
   return (
     <div className="p-4 space-y-4">
       {/* Header */}
-      <div className="pt-2">
-        <h1 className="text-xl font-bold text-gray-800 capitalize">{formatDateLong(DATE)}</h1>
+      <div className="pt-2 flex items-center gap-2">
+        <button
+          onClick={() => navigateDate(-1)}
+          className="p-1.5 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+        >
+          <ChevronLeft size={20} />
+        </button>
+        <button
+          className="flex-1 text-left"
+          onClick={() => dateInputRef.current?.showPicker()}
+        >
+          <h1 className="text-xl font-bold text-gray-800 capitalize">{formatDateLong(currentDate)}</h1>
+        </button>
+        <input
+          ref={dateInputRef}
+          type="date"
+          className="sr-only"
+          value={currentDate}
+          max={today()}
+          onChange={e => e.target.value && setCurrentDate(e.target.value)}
+        />
+        <button
+          onClick={() => navigateDate(1)}
+          disabled={currentDate >= today()}
+          className="p-1.5 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          <ChevronRight size={20} />
+        </button>
       </div>
 
       {/* Macro summary */}
