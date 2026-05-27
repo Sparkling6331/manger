@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Plus, Trash2, ExternalLink, BookmarkCheck, Eraser } from 'lucide-react'
+import { Plus, Trash2, ExternalLink, BookmarkCheck, Eraser, X } from 'lucide-react'
 import { db } from '../db'
-import { today, formatDateLong, sumEntries } from '../utils'
+import { today, formatDateLong, sumEntries, round } from '../utils'
 import { MEAL_META, MEAL_ORDER, type MealType, type MealEntry } from '../types'
 import MacroProgress from '../components/MacroProgress'
 import FoodSearch from '../components/FoodSearch'
@@ -12,6 +12,9 @@ const DATE = today()
 export default function Today() {
   const [addingMeal, setAddingMeal] = useState<MealType | null>(null)
   const [saved, setSaved] = useState(false)
+  const [editingEntry, setEditingEntry] = useState<MealEntry | null>(null)
+  const [editQty, setEditQty] = useState('')
+  const [replacingEntry, setReplacingEntry] = useState<MealEntry | null>(null)
 
   const profile = useLiveQuery(() => db.profile.get(1))
   const entries = useLiveQuery(() => db.mealEntries.where('date').equals(DATE).toArray(), [])
@@ -26,6 +29,32 @@ export default function Today() {
 
   async function handleDelete(id: number) {
     await db.mealEntries.delete(id)
+  }
+
+  function openEdit(entry: MealEntry) {
+    setEditingEntry(entry)
+    setEditQty(String(entry.quantity))
+  }
+
+  async function handleSaveEdit() {
+    if (!editingEntry) return
+    const qty = parseFloat(editQty)
+    if (!qty || qty <= 0) return
+    const factor = qty / editingEntry.quantity
+    await db.mealEntries.update(editingEntry.id!, {
+      quantity: qty,
+      calories: round(editingEntry.calories * factor),
+      proteins: round(editingEntry.proteins * factor),
+      carbs:    round(editingEntry.carbs    * factor),
+      fats:     round(editingEntry.fats     * factor),
+    })
+    setEditingEntry(null)
+  }
+
+  async function handleReplaceEntry(old: MealEntry, data: Omit<MealEntry, 'id' | 'date' | 'meal'>) {
+    await db.mealEntries.delete(old.id!)
+    await db.mealEntries.add({ ...data, date: DATE, meal: old.meal })
+    setReplacingEntry(null)
   }
 
   async function toggleExternal(entry: MealEntry) {
@@ -89,13 +118,13 @@ export default function Today() {
 
             {mealEntries.map(entry => (
               <div key={entry.id} className="flex items-center px-4 py-2.5 border-b border-gray-50 last:border-0 gap-2">
-                <div className="flex-1 min-w-0">
+                <button className="flex-1 min-w-0 text-left" onClick={() => openEdit(entry)}>
                   <p className="text-sm text-gray-800 truncate">{entry.foodName}</p>
                   <p className="text-xs text-gray-400">
                     {entry.quantity}{entry.baseUnit === 1 ? 'u' : 'g'} · {Math.round(entry.calories)} kcal
                     {' · '}P:{entry.proteins}g G:{entry.carbs}g L:{entry.fats}g
                   </p>
-                </div>
+                </button>
                 <button
                   onClick={() => toggleExternal(entry)}
                   className={`p-1 rounded-lg ${entry.isExternal ? 'text-orange-400' : 'text-gray-200'}`}
@@ -147,10 +176,66 @@ export default function Today() {
         </div>
       )}
 
-      {addingMeal && (
+      {/* Edit entry modal */}
+      {editingEntry && (
+        <>
+          <div className="fixed inset-0 z-[55] bg-black/50" onClick={() => setEditingEntry(null)} />
+          <div className="fixed inset-0 z-[60] bg-white flex flex-col sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-80 sm:rounded-2xl sm:shadow-xl">
+            <div className="flex items-center gap-2 px-4 py-4 border-b border-gray-100 shrink-0">
+              <p className="flex-1 font-semibold text-gray-800 truncate">{editingEntry.foodName}</p>
+              <button onClick={() => setEditingEntry(null)}><X size={20} className="text-gray-400" /></button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="flex items-center gap-3">
+                <label className="text-sm text-gray-600 shrink-0">Quantité</label>
+                <input
+                  autoFocus
+                  type="number"
+                  inputMode="decimal"
+                  className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-xl font-bold text-center"
+                  value={editQty}
+                  onChange={e => setEditQty(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSaveEdit()}
+                />
+                <span className="text-gray-400 shrink-0">{editingEntry.baseUnit === 1 ? 'u' : 'g'}</span>
+              </div>
+              {parseFloat(editQty) > 0 && (() => {
+                const f = parseFloat(editQty) / editingEntry.quantity
+                return (
+                  <div className="bg-green-50 rounded-xl p-3 flex justify-between text-sm text-gray-700">
+                    <span><strong>{Math.round(editingEntry.calories * f)}</strong> kcal</span>
+                    <span>P:<strong>{round(editingEntry.proteins * f)}g</strong></span>
+                    <span>G:<strong>{round(editingEntry.carbs * f)}g</strong></span>
+                    <span>L:<strong>{round(editingEntry.fats * f)}g</strong></span>
+                  </div>
+                )
+              })()}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => { setReplacingEntry(editingEntry); setEditingEntry(null) }}
+                  className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600"
+                >
+                  Changer l'aliment
+                </button>
+                <button
+                  onClick={handleSaveEdit}
+                  className="flex-1 py-2.5 rounded-xl bg-green-600 text-white text-sm font-semibold"
+                >
+                  Enregistrer
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {(addingMeal || replacingEntry) && (
         <FoodSearch
-          onAdd={data => handleAddEntry(addingMeal, data)}
-          onClose={() => setAddingMeal(null)}
+          onAdd={data => replacingEntry
+            ? handleReplaceEntry(replacingEntry, data)
+            : handleAddEntry(addingMeal!, data)
+          }
+          onClose={() => { setAddingMeal(null); setReplacingEntry(null) }}
         />
       )}
     </div>
