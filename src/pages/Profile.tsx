@@ -148,14 +148,28 @@ export default function Profile() {
     setImporting(true)
     setImportError(null)
     setImportProgress({ pagesLoaded: 0, totalPages: 0, recordCount: 0 })
+
+    // Prevent screen from sleeping during import (drops IndexedDB connection on iOS)
+    let wakeLock: WakeLockSentinel | null = null
+    try {
+      if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen')
+    } catch { /* not available on all browsers */ }
+
     try {
       const count = await importOFFFile(file, p => setImportProgress({ ...p }))
       const meta: OffMeta = { date: new Date().toLocaleDateString('fr-FR'), count }
       saveOffMeta(meta)
       setOffMeta(meta)
-    } catch (e) {
-      setImportError(e instanceof Error ? e.message : 'Erreur inconnue')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Erreur inconnue'
+      const isIdleCrash = msg.includes('Connection to Indexed Database') || msg.toLowerCase().includes('unknown')
+      setImportError(
+        isIdleCrash
+          ? "L'écran s'est mis en veille et a coupé la connexion. Désactivez la mise en veille automatique et réessayez."
+          : msg
+      )
     } finally {
+      wakeLock?.release().catch(() => {})
       setImporting(false)
       setImportProgress(null)
     }
@@ -349,6 +363,7 @@ export default function Profile() {
             <p className="text-xs text-gray-400 text-center">
               {importProgress.recordCount.toLocaleString('fr-FR')} produits importés…
             </p>
+            <p className="text-xs text-amber-500 text-center">⚠ Gardez l'écran allumé jusqu'à la fin</p>
           </div>
         )}
         {importError && <p className="text-xs text-red-500">{importError}</p>}
