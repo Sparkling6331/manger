@@ -73,6 +73,7 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
   const [offResults, setOffResults] = useState<OFFProduct[]>([])
   const [offLoading, setOffLoading] = useState(false)
   const [offError, setOffError] = useState<string | null>(null)
+  const [fromOFF, setFromOFF] = useState(false)
 
   const foods = useLiveQuery(() => db.foods.toArray(), [])
   const recipes = useLiveQuery(() => db.recipes.toArray(), [])
@@ -115,6 +116,7 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
   function openManual() {
     setManual({ name: query, calories: 0, proteins: 0, carbs: 0, fats: 0 })
     setManualQty('100')
+    setFromOFF(false)
     setMode('manual')
   }
 
@@ -163,12 +165,30 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
       carbs: round(n.carbohydrates_100g ?? 0),
       fats: round(n.fat_100g ?? 0),
     })
+    setFromOFF(true)
     setMode('manual')
   }
 
-  function handleAddManual() {
+  async function handleAddManual() {
     const qty = parseFloat(manualQty) || 100
     const ratio = qty / 100
+    // Save to local food index so it appears in the main search next time
+    if (fromOFF && manual.name.trim()) {
+      const name = manual.name.trim()
+      const existing = await db.foods.where('name').equals(name).count()
+      if (existing === 0) {
+        await db.foods.add({
+          id: Date.now(),
+          name,
+          unit: 100,
+          calories: manual.calories,
+          proteins: manual.proteins,
+          carbs: manual.carbs,
+          fats: manual.fats,
+          category: 'off',
+        })
+      }
+    }
     onAdd({
       foodName: manual.name.trim() || 'Aliment personnalisé',
       quantity: qty,
