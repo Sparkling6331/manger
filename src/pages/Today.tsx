@@ -13,6 +13,7 @@ export default function Today() {
   const [saved, setSaved] = useState(false)
   const [editingEntry, setEditingEntry] = useState<MealEntry | null>(null)
   const [editQty, setEditQty] = useState('')
+  const [editMeal, setEditMeal] = useState<MealType>('breakfast')
   const [replacingEntry, setReplacingEntry] = useState<MealEntry | null>(null)
   const dateInputRef = useRef<HTMLInputElement>(null)
 
@@ -42,6 +43,7 @@ export default function Today() {
   function openEdit(entry: MealEntry) {
     setEditingEntry(entry)
     setEditQty(String(entry.quantity))
+    setEditMeal(entry.meal)
   }
 
   async function handleSaveEdit() {
@@ -51,6 +53,7 @@ export default function Today() {
     const factor = qty / editingEntry.quantity
     await db.mealEntries.update(editingEntry.id!, {
       quantity: qty,
+      meal: editMeal,
       calories: round(editingEntry.calories * factor),
       proteins: round(editingEntry.proteins * factor),
       carbs:    round(editingEntry.carbs    * factor),
@@ -255,6 +258,26 @@ export default function Today() {
                   </div>
                 )
               })()}
+              <div>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Déplacer vers</p>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {MEAL_ORDER.map(m => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setEditMeal(m)}
+                      className={`py-2.5 rounded-xl flex flex-col items-center gap-0.5 transition-colors ${
+                        editMeal === m
+                          ? 'bg-green-600 text-white'
+                          : 'bg-gray-50 text-gray-500 active:bg-gray-100'
+                      }`}
+                    >
+                      <span className="text-base">{MEAL_META[m].icon}</span>
+                      <span className="text-[10px] font-medium leading-tight text-center px-1">{MEAL_META[m].label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div className="flex gap-3">
                 <button
                   onClick={() => { setReplacingEntry(editingEntry); setEditingEntry(null) }}
