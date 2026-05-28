@@ -159,16 +159,16 @@ export default function Today() {
                 </button>
                 <button
                   onClick={() => toggleExternal(entry)}
-                  className={`p-1 rounded-lg ${entry.isExternal ? 'text-orange-400' : 'text-gray-200'}`}
+                  className={`p-2 rounded-xl ${entry.isExternal ? 'text-orange-400' : 'text-gray-200'}`}
                   title="Repas extérieur"
                 >
-                  <ExternalLink size={14} />
+                  <ExternalLink size={15} />
                 </button>
                 <button
                   onClick={() => handleDelete(entry.id!)}
-                  className="p-1 text-gray-300 hover:text-red-400 rounded-lg"
+                  className="p-2 text-gray-300 hover:text-red-400 rounded-xl"
                 >
-                  <Trash2 size={14} />
+                  <Trash2 size={15} />
                 </button>
               </div>
             ))}
@@ -189,10 +189,10 @@ export default function Today() {
         <div className="flex gap-2 pb-4">
           <button
             onClick={handleSaveHistory}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-semibold transition-colors ${
+            className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl text-sm font-semibold transition-colors ${
               saved
                 ? 'bg-green-100 text-green-700'
-                : 'bg-green-600 text-white hover:bg-green-700'
+                : 'bg-green-600 text-white active:bg-green-700'
             }`}
           >
             <BookmarkCheck size={16} />
@@ -200,7 +200,7 @@ export default function Today() {
           </button>
           <button
             onClick={handleClearToday}
-            className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500 rounded-2xl text-sm font-semibold transition-colors"
+            className="flex items-center justify-center gap-2 px-4 py-4 bg-gray-100 text-gray-500 active:bg-red-50 active:text-red-500 rounded-2xl text-sm font-semibold transition-colors"
           >
             <Eraser size={16} />
             Effacer
@@ -211,47 +211,60 @@ export default function Today() {
       {/* Edit entry modal */}
       {editingEntry && (
         <>
-          <div className="fixed inset-0 z-[55] bg-black/50" onClick={() => setEditingEntry(null)} />
-          <div className="fixed inset-0 z-[60] bg-white flex flex-col sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-80 sm:rounded-2xl sm:shadow-xl">
-            <div className="flex items-center gap-2 px-4 py-4 border-b border-gray-100 shrink-0">
-              <p className="flex-1 font-semibold text-gray-800 truncate">{editingEntry.foodName}</p>
-              <button onClick={() => setEditingEntry(null)}><X size={20} className="text-gray-400" /></button>
+          <div className="fixed inset-0 z-[55] bg-black/40" onClick={() => setEditingEntry(null)} />
+          <div className="fixed z-[60] bottom-0 inset-x-0 bg-white rounded-t-3xl shadow-[0_-2px_24px_rgba(0,0,0,0.12)] sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-96 sm:rounded-2xl sm:shadow-xl">
+            <div className="flex justify-center pt-3 sm:hidden">
+              <div className="w-9 h-1 bg-gray-200 rounded-full" />
             </div>
-            <div className="p-6 space-y-4">
-              <div className="flex items-center gap-3">
-                <label className="text-sm text-gray-600 shrink-0">Quantité</label>
+            <div className="flex items-center gap-2 px-4 py-4 border-b border-gray-100">
+              <p className="flex-1 font-semibold text-gray-800 truncate">{editingEntry.foodName}</p>
+              <button onClick={() => setEditingEntry(null)} className="p-2 -mr-2 text-gray-400 active:bg-gray-100 rounded-xl">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6 space-y-4" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
+              <div className="flex items-center justify-center gap-4">
                 <input
                   autoFocus
                   type="number"
                   inputMode="decimal"
-                  className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-xl font-bold text-center"
+                  className="w-36 border-2 border-gray-200 focus:border-green-400 rounded-2xl px-4 py-4 text-4xl font-bold text-center outline-none transition-colors"
                   value={editQty}
                   onChange={e => setEditQty(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleSaveEdit()}
                 />
-                <span className="text-gray-400 shrink-0">{editingEntry.portionLabel ?? (editingEntry.baseUnit === 1 ? 'u' : 'g')}</span>
+                <span className="text-lg text-gray-400 font-medium shrink-0">
+                  {editingEntry.portionLabel ?? (editingEntry.baseUnit === 1 ? 'u' : 'g')}
+                </span>
               </div>
               {parseFloat(editQty) > 0 && (() => {
                 const f = parseFloat(editQty) / editingEntry.quantity
                 return (
-                  <div className="bg-green-50 rounded-xl p-3 flex justify-between text-sm text-gray-700">
-                    <span><strong>{Math.round(editingEntry.calories * f)}</strong> kcal</span>
-                    <span>P:<strong>{round(editingEntry.proteins * f)}g</strong></span>
-                    <span>G:<strong>{round(editingEntry.carbs * f)}g</strong></span>
-                    <span>L:<strong>{round(editingEntry.fats * f)}g</strong></span>
+                  <div className="bg-green-50 rounded-2xl p-4 grid grid-cols-4 gap-1 text-center">
+                    {[
+                      { val: Math.round(editingEntry.calories * f), label: 'kcal' },
+                      { val: round(editingEntry.proteins * f), label: 'prot.' },
+                      { val: round(editingEntry.carbs * f), label: 'gluc.' },
+                      { val: round(editingEntry.fats * f), label: 'lip.' },
+                    ].map(({ val, label }) => (
+                      <div key={label}>
+                        <p className="text-base font-bold text-gray-800">{val}</p>
+                        <p className="text-[11px] text-gray-400">{label}</p>
+                      </div>
+                    ))}
                   </div>
                 )
               })()}
               <div className="flex gap-3">
                 <button
                   onClick={() => { setReplacingEntry(editingEntry); setEditingEntry(null) }}
-                  className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600"
+                  className="flex-1 py-4 rounded-2xl border border-gray-200 text-sm text-gray-600 font-medium active:bg-gray-50"
                 >
                   Changer l'aliment
                 </button>
                 <button
                   onClick={handleSaveEdit}
-                  className="flex-1 py-2.5 rounded-xl bg-green-600 text-white text-sm font-semibold"
+                  className="flex-1 py-4 rounded-2xl bg-green-600 active:bg-green-700 text-white text-base font-semibold"
                 >
                   Enregistrer
                 </button>

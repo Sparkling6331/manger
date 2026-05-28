@@ -68,7 +68,7 @@ export default function Weight() {
         <h1 className="text-xl font-bold text-gray-800">Poids</h1>
         <button
           onClick={() => setShowAdd(true)}
-          className="flex items-center gap-1.5 bg-green-600 text-white text-sm font-medium px-3 py-1.5 rounded-xl"
+          className="flex items-center gap-1.5 bg-green-600 text-white text-sm font-semibold px-4 py-2.5 rounded-2xl"
         >
           <Plus size={16} /> Peser
         </button>
@@ -118,32 +118,37 @@ export default function Weight() {
         ))}
       </div>
 
-      {/* Add modal */}
+      {/* Add modal — bottom sheet on mobile */}
       {showAdd && (
         <>
-          <div className="fixed inset-0 z-[55] bg-black/50" onClick={() => setShowAdd(false)} />
-          <div className="fixed inset-0 z-[60] bg-white flex flex-col sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-80 sm:rounded-2xl sm:shadow-xl">
-            <div className="flex justify-between items-center px-4 py-4 border-b border-gray-100 shrink-0">
-              <h2 className="font-semibold text-gray-800">Ajouter un relevé</h2>
-              <button onClick={() => setShowAdd(false)}><X size={20} className="text-gray-400" /></button>
+          <div className="fixed inset-0 z-[55] bg-black/40" onClick={() => setShowAdd(false)} />
+          <div className="fixed z-[60] bottom-0 inset-x-0 bg-white rounded-t-3xl shadow-[0_-2px_24px_rgba(0,0,0,0.12)] sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-80 sm:rounded-2xl sm:shadow-xl">
+            <div className="flex justify-center pt-3 sm:hidden">
+              <div className="w-9 h-1 bg-gray-200 rounded-full" />
             </div>
-            <div className="p-6 space-y-4">
-              <div className="flex items-center gap-3">
+            <div className="flex justify-between items-center px-4 py-4 border-b border-gray-100">
+              <h2 className="font-semibold text-gray-800">Ajouter un relevé</h2>
+              <button onClick={() => setShowAdd(false)} className="p-2 -mr-2 text-gray-400 active:bg-gray-100 rounded-xl">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6 space-y-4" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
+              <div className="flex items-center justify-center gap-4">
                 <input
                   autoFocus
                   type="number"
                   inputMode="decimal"
                   placeholder="0.0"
-                  className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-2xl font-bold text-center"
+                  className="w-36 border-2 border-gray-200 focus:border-green-400 rounded-2xl px-4 py-4 text-4xl font-bold text-center outline-none transition-colors"
                   value={weightInput}
                   onChange={e => setWeightInput(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleAdd()}
                 />
-                <span className="text-gray-400 text-lg">kg</span>
+                <span className="text-gray-400 text-lg font-medium">kg</span>
               </div>
               <button
                 onClick={handleAdd}
-                className="w-full py-3 bg-green-600 text-white font-semibold rounded-xl"
+                className="w-full py-4 bg-green-600 active:bg-green-700 text-white text-base font-semibold rounded-2xl"
               >
                 Enregistrer
               </button>

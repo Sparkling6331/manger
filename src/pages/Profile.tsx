@@ -227,12 +227,12 @@ export default function Profile() {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="text-xs text-gray-500">Date de naissance</label>
-            <input type="date" className="w-full border border-gray-200 rounded-lg px-3 py-2 mt-1 text-sm"
+            <input type="date" className="w-full border border-gray-200 rounded-xl px-3 py-3 mt-1 text-base"
               value={form.birthDate ?? ''} onChange={e => update({ birthDate: e.target.value })} />
           </div>
           <div>
             <label className="text-xs text-gray-500">Genre</label>
-            <select className="w-full border border-gray-200 rounded-lg px-3 py-2 mt-1 text-sm"
+            <select className="w-full border border-gray-200 rounded-xl px-3 py-3 mt-1 text-base"
               value={form.gender ?? 'male'} onChange={e => update({ gender: e.target.value as 'male' | 'female' })}>
               <option value="male">Homme</option>
               <option value="female">Femme</option>
@@ -240,24 +240,24 @@ export default function Profile() {
           </div>
           <div>
             <label className="text-xs text-gray-500">Poids actuel (kg)</label>
-            <input type="number" inputMode="decimal" className="w-full border border-gray-200 rounded-lg px-3 py-2 mt-1 text-sm"
+            <input type="number" inputMode="decimal" className="w-full border border-gray-200 rounded-xl px-3 py-3 mt-1 text-base"
               value={form.currentWeight ?? ''} onChange={e => update({ currentWeight: parseFloat(e.target.value) })} />
           </div>
           <div>
             <label className="text-xs text-gray-500">Poids de référence (kg)</label>
-            <input type="number" inputMode="decimal" placeholder="masse maigre" className="w-full border border-gray-200 rounded-lg px-3 py-2 mt-1 text-sm"
+            <input type="number" inputMode="decimal" placeholder="masse maigre" className="w-full border border-gray-200 rounded-xl px-3 py-3 mt-1 text-base"
               value={form.targetWeight ?? ''} onChange={e => update({ targetWeight: parseFloat(e.target.value) })} />
           </div>
           <div className="col-span-2">
             <label className="text-xs text-gray-500">Taille (cm)</label>
-            <input type="number" inputMode="numeric" className="w-full border border-gray-200 rounded-lg px-3 py-2 mt-1 text-sm"
+            <input type="number" inputMode="numeric" className="w-full border border-gray-200 rounded-xl px-3 py-3 mt-1 text-base"
               value={form.height ?? ''} onChange={e => update({ height: parseInt(e.target.value) })} />
           </div>
         </div>
 
         <div>
           <label className="text-xs text-gray-500">Activité physique</label>
-          <select className="w-full border border-gray-200 rounded-lg px-3 py-2 mt-1 text-sm"
+          <select className="w-full border border-gray-200 rounded-xl px-3 py-3 mt-1 text-base"
             value={form.activityLevel ?? 1.55} onChange={e => update({ activityLevel: parseFloat(e.target.value) })}>
             {ACTIVITY_OPTIONS.map(o => (
               <option key={o.value} value={o.value}>{o.label} ({o.value})</option>
@@ -302,7 +302,7 @@ export default function Profile() {
                 {key === 'calories' ? 'Calories (kcal)' : key === 'proteins' ? 'Protéines (g)' : key === 'carbs' ? 'Glucides (g)' : 'Lipides (g)'}
               </label>
               <input type="number" inputMode="numeric"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 mt-1 text-sm"
+                className="w-full border border-gray-200 rounded-xl px-3 py-3 mt-1 text-base"
                 value={form.goals?.[key] ?? ''}
                 onChange={e => update({ goals: { ...form.goals!, [key]: parseInt(e.target.value) } })} />
             </div>
@@ -312,7 +312,7 @@ export default function Profile() {
 
       <button
         onClick={handleSave}
-        className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-colors ${
+        className={`w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-semibold text-base transition-colors ${
           saved ? 'bg-green-100 text-green-700' : 'bg-green-600 text-white'
         }`}
       >
@@ -334,7 +334,7 @@ export default function Profile() {
           <label className="text-xs text-gray-500 shrink-0">Résultats affichés</label>
           <input
             type="number" inputMode="numeric" min="5" max="50"
-            className="w-20 border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-center"
+            className="w-20 border border-gray-200 rounded-xl px-3 py-3 text-base text-center"
             value={offLimit}
             onChange={e => {
               const v = Math.min(50, Math.max(5, parseInt(e.target.value) || OFF_LIMIT_DEFAULT))
@@ -368,7 +368,7 @@ export default function Profile() {
         )}
         {importError && <p className="text-xs text-red-500">{importError}</p>}
         {!importing && (
-          <label className="flex items-center justify-center gap-2 w-full py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer">
+          <label className="flex items-center justify-center gap-2 w-full py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-medium text-gray-700 active:bg-gray-100 transition-colors cursor-pointer">
             {offMeta ? <RefreshCw size={15} /> : <Database size={15} />}
             {offMeta ? 'Mettre à jour la base' : 'Importer le fichier OFF'}
             <input type="file" accept=".gz,.csv" className="hidden" onChange={handleImportOFF} />
@@ -388,10 +388,10 @@ export default function Profile() {
         </ol>
         <div className="flex gap-3">
           <button onClick={handleExport}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+            className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-medium text-gray-700 active:bg-gray-100 transition-colors">
             <Download size={15} /> Exporter
           </button>
-          <label className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors">
+          <label className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-medium text-gray-700 cursor-pointer active:bg-gray-100 transition-colors">
             <Upload size={15} /> Importer
             <input type="file" accept=".json" className="hidden" onChange={handleImport} />
           </label>
