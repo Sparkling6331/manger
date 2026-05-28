@@ -122,7 +122,7 @@ export default function Weight() {
       {showAdd && (
         <>
           <div className="fixed inset-0 z-[55] bg-black/40" onClick={() => setShowAdd(false)} />
-          <div className="fixed z-[60] bottom-0 inset-x-0 bg-white rounded-t-3xl shadow-[0_-2px_24px_rgba(0,0,0,0.12)] sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-80 sm:rounded-2xl sm:shadow-xl">
+          <div className="fixed z-[60] bottom-0 left-0 right-0 w-full bg-white rounded-t-3xl shadow-[0_-2px_24px_rgba(0,0,0,0.12)] sm:inset-auto sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-80 sm:rounded-2xl sm:shadow-xl">
             <div className="flex justify-center pt-3 sm:hidden">
               <div className="w-9 h-1 bg-gray-200 rounded-full" />
             </div>
