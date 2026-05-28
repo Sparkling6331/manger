@@ -2,6 +2,7 @@ export interface Food {
   id: number;
   name: string;
   unit: number;
+  portionLabel?: string;
   calories: number;
   proteins: number;
   fats: number;
@@ -47,6 +48,7 @@ export interface MealEntry {
   foodName: string;
   quantity: number;
   baseUnit: number;
+  portionLabel?: string;
   proteins: number;
   fats: number;
   carbs: number;

@@ -8,6 +8,7 @@ import type { Food, Recipe } from '../types'
 
 type FoodItem = { type: 'food'; data: Food } | { type: 'recipe'; data: Recipe }
 type Mode = 'search' | 'quantity' | 'manual' | 'off'
+type ManualUnit = '100g' | 'portion'
 
 interface OFFProduct {
   product_name: string
@@ -35,6 +36,7 @@ interface Props {
     foodName: string
     quantity: number
     baseUnit: number
+    portionLabel?: string
     proteins: number
     fats: number
     carbs: number
@@ -70,6 +72,9 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
   const [mode, setMode] = useState<Mode>('search')
   const [manual, setManual] = useState<ManualForm>({ name: '', calories: 0, proteins: 0, carbs: 0, fats: 0 })
   const [manualQty, setManualQty] = useState('100')
+  const [manualUnit, setManualUnit] = useState<ManualUnit>('100g')
+  const [portionLabel, setPortionLabel] = useState('portion')
+  const [portionWeight, setPortionWeight] = useState('')
   const [offResults, setOffResults] = useState<OFFProduct[]>([])
   const [offLoading, setOffLoading] = useState(false)
   const [offError, setOffError] = useState<string | null>(null)
@@ -104,7 +109,14 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
     const qty = parseFloat(quantity)
     if (!qty || qty <= 0) return
     if (selected.type === 'food') {
-      onAdd({ foodId: selected.data.id, foodName: selected.data.name, quantity: qty, baseUnit: selected.data.unit, ...calcNutrition(selected.data, qty) })
+      onAdd({
+        foodId: selected.data.id,
+        foodName: selected.data.name,
+        quantity: qty,
+        baseUnit: selected.data.unit,
+        portionLabel: selected.data.portionLabel,
+        ...calcNutrition(selected.data, qty),
+      })
     } else {
       const r = selected.data
       const ratio = qty / 100
@@ -116,6 +128,9 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
   function openManual() {
     setManual({ name: query, calories: 0, proteins: 0, carbs: 0, fats: 0 })
     setManualQty('100')
+    setManualUnit('100g')
+    setPortionLabel('portion')
+    setPortionWeight('')
     setFromOFF(false)
     setMode('manual')
   }
@@ -170,29 +185,48 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
   }
 
   async function handleAddManual() {
-    const qty = parseFloat(manualQty) || 100
-    const ratio = qty / 100
-    // Save to local food index so it appears in the main search next time
+    const isPortion = manualUnit === 'portion'
+    const pLabel = isPortion ? (portionLabel.trim() || 'portion') : undefined
+    const pWeight = isPortion ? (parseFloat(portionWeight) || 100) : 100
+
+    let qty: number
+    let baseUnit: number
+    let ratio: number
+
+    if (isPortion) {
+      qty = parseFloat(manualQty) || 1
+      baseUnit = 1
+      ratio = (qty * pWeight) / 100
+    } else {
+      qty = parseFloat(manualQty) || 100
+      baseUnit = 100
+      ratio = qty / 100
+    }
+
     if (fromOFF && manual.name.trim()) {
       const name = manual.name.trim()
       const existing = await db.foods.where('name').equals(name).count()
       if (existing === 0) {
+        const portionRatio = pWeight / 100
         await db.foods.add({
           id: Date.now(),
           name,
-          unit: 100,
-          calories: manual.calories,
-          proteins: manual.proteins,
-          carbs: manual.carbs,
-          fats: manual.fats,
+          unit: isPortion ? 1 : 100,
+          portionLabel: pLabel,
+          calories: isPortion ? round(manual.calories * portionRatio) : manual.calories,
+          proteins: isPortion ? round(manual.proteins * portionRatio) : manual.proteins,
+          carbs: isPortion ? round(manual.carbs * portionRatio) : manual.carbs,
+          fats: isPortion ? round(manual.fats * portionRatio) : manual.fats,
           category: 'off',
         })
       }
     }
+
     onAdd({
       foodName: manual.name.trim() || 'Aliment personnalisé',
       quantity: qty,
-      baseUnit: 100,
+      baseUnit,
+      portionLabel: pLabel,
       calories: round(manual.calories * ratio),
       proteins: round(manual.proteins * ratio),
       carbs: round(manual.carbs * ratio),
@@ -214,12 +248,36 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
   }, [selected, quantity])
 
   const manualPreview = useMemo(() => {
+    if (manualUnit === 'portion') {
+      const portions = parseFloat(manualQty) || 1
+      const pGrams = parseFloat(portionWeight) || 100
+      const ratio = (portions * pGrams) / 100
+      return {
+        calories: round(manual.calories * ratio),
+        proteins: round(manual.proteins * ratio),
+        carbs: round(manual.carbs * ratio),
+        fats: round(manual.fats * ratio),
+      }
+    }
     const qty = parseFloat(manualQty) || 100
     const ratio = qty / 100
     return { calories: round(manual.calories * ratio), proteins: round(manual.proteins * ratio), carbs: round(manual.carbs * ratio), fats: round(manual.fats * ratio) }
-  }, [manual, manualQty])
+  }, [manual, manualQty, manualUnit, portionWeight])
 
-  const unitLabel = selected?.type === 'food' ? (selected.data.unit === 1 ? 'unité(s)' : 'g') : 'g'
+  function foodUnitLabel(food: Food): string {
+    if (food.portionLabel) return food.portionLabel
+    return food.unit === 1 ? 'unité(s)' : 'g'
+  }
+
+  function foodRefLabel(food: Food): string {
+    if (food.portionLabel) return `1 ${food.portionLabel}`
+    return food.unit === 1 ? '1 unité' : `${food.unit}g`
+  }
+
+  function foodCalLabel(food: Food): string {
+    if (food.portionLabel) return food.portionLabel
+    return food.unit === 1 ? 'unité' : `${food.unit}g`
+  }
 
   // ── render ─────────────────────────────────────────────
 
@@ -271,7 +329,7 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
                 const isRecipe = item.type === 'recipe'
                 const cal = isRecipe
                   ? `${item.data.per100g.calories} kcal/100g`
-                  : `${item.data.calories} kcal/${item.data.unit === 1 ? 'unité' : `${item.data.unit}g`}`
+                  : `${item.data.calories} kcal/${foodCalLabel(item.data as Food)}`
                 return (
                   <button key={i} onClick={() => handleSelect(item)}
                     className="w-full flex items-center gap-2 px-4 py-3 border-b border-gray-50 hover:bg-gray-50 text-left">
@@ -304,7 +362,7 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
             <div className="p-4 space-y-4">
               <p className="text-xs text-gray-400">
                 {selected.type === 'food'
-                  ? `Valeurs pour ${selected.data.unit}${selected.data.unit === 1 ? ' unité' : 'g'} : ${selected.data.calories} kcal · P:${selected.data.proteins}g G:${selected.data.carbs}g L:${selected.data.fats}g`
+                  ? `Valeurs pour ${foodRefLabel(selected.data)} : ${selected.data.calories} kcal · P:${selected.data.proteins}g G:${selected.data.carbs}g L:${selected.data.fats}g`
                   : `Valeurs pour 100g : ${selected.data.per100g.calories} kcal · P:${selected.data.per100g.proteins}g G:${selected.data.per100g.carbs}g L:${selected.data.per100g.fats}g`}
               </p>
               <div className="flex items-center gap-3">
@@ -312,7 +370,9 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
                 <input autoFocus type="number" inputMode="decimal"
                   className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-center text-xl font-bold"
                   value={quantity} onChange={e => setQuantity(e.target.value)} />
-                <span className="text-sm text-gray-500 shrink-0">{unitLabel}</span>
+                <span className="text-sm text-gray-500 shrink-0">
+                  {selected.type === 'food' ? foodUnitLabel(selected.data) : 'g'}
+                </span>
               </div>
               {preview && (
                 <div className="bg-green-50 rounded-xl p-3 flex justify-between text-sm text-gray-700">
@@ -368,13 +428,64 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
                   </div>
                 ))}
               </div>
+
+              {/* Unit type toggle */}
+              <div>
+                <label className="text-xs text-gray-500 block mb-1.5">Type de portion</label>
+                <div className="flex rounded-xl border border-gray-200 overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => { setManualUnit('100g'); setManualQty('100') }}
+                    className={`flex-1 py-2 text-sm transition-colors ${manualUnit === '100g' ? 'bg-green-600 text-white font-semibold' : 'text-gray-600 hover:bg-gray-50'}`}
+                  >
+                    Pour 100g
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setManualUnit('portion'); setManualQty('1') }}
+                    className={`flex-1 py-2 text-sm transition-colors ${manualUnit === 'portion' ? 'bg-green-600 text-white font-semibold' : 'text-gray-600 hover:bg-gray-50'}`}
+                  >
+                    Par portion
+                  </button>
+                </div>
+              </div>
+
+              {/* Portion details */}
+              {manualUnit === 'portion' && (
+                <div className="grid grid-cols-2 gap-3 bg-green-50 rounded-xl p-3">
+                  <div>
+                    <label className="text-xs text-gray-500">Nom de la portion</label>
+                    <input
+                      type="text"
+                      placeholder="part, tranche, bol…"
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 mt-1 text-sm bg-white"
+                      value={portionLabel}
+                      onChange={e => setPortionLabel(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500">Poids (g)</label>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      placeholder="ex : 150"
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 mt-1 text-sm bg-white text-center"
+                      value={portionWeight}
+                      onChange={e => setPortionWeight(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
+
               <div>
                 <label className="text-xs text-gray-500">Quantité à ajouter</label>
                 <div className="flex items-center gap-2 mt-1">
                   <input type="number" inputMode="decimal"
                     className="w-24 border border-gray-200 rounded-lg px-3 py-2 text-sm text-center"
                     value={manualQty} onChange={e => setManualQty(e.target.value)} />
-                  <span className="text-sm text-gray-500">g</span>
+                  <span className="text-sm text-gray-500">
+                    {manualUnit === 'portion' ? (portionLabel.trim() || 'portion') : 'g'}
+                  </span>
                 </div>
               </div>
               {(manual.calories > 0 || manual.proteins > 0) && (

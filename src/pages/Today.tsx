@@ -153,7 +153,7 @@ export default function Today() {
                 <button className="flex-1 min-w-0 text-left" onClick={() => openEdit(entry)}>
                   <p className="text-sm text-gray-800 truncate">{entry.foodName}</p>
                   <p className="text-xs text-gray-400">
-                    {entry.quantity}{entry.baseUnit === 1 ? 'u' : 'g'} · {Math.round(entry.calories)} kcal
+                    {entry.quantity}{entry.portionLabel ? ` ${entry.portionLabel}` : (entry.baseUnit === 1 ? 'u' : 'g')} · {Math.round(entry.calories)} kcal
                     {' · '}P:{entry.proteins}g G:{entry.carbs}g L:{entry.fats}g
                   </p>
                 </button>
@@ -229,7 +229,7 @@ export default function Today() {
                   onChange={e => setEditQty(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleSaveEdit()}
                 />
-                <span className="text-gray-400 shrink-0">{editingEntry.baseUnit === 1 ? 'u' : 'g'}</span>
+                <span className="text-gray-400 shrink-0">{editingEntry.portionLabel ?? (editingEntry.baseUnit === 1 ? 'u' : 'g')}</span>
               </div>
               {parseFloat(editQty) > 0 && (() => {
                 const f = parseFloat(editQty) / editingEntry.quantity
