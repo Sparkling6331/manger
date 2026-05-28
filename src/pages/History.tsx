@@ -1,9 +1,11 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { useNavigate } from 'react-router-dom'
 import { db } from '../db'
 import { formatDateShort, sumEntries, pct } from '../utils'
 import type { HistoryEntry } from '../types'
 
 export default function History() {
+  const navigate = useNavigate()
   const profile = useLiveQuery(() => db.profile.get(1))
   const seedHistory = useLiveQuery(() => db.history.orderBy('date').reverse().toArray(), [])
   const allEntries = useLiveQuery(() => db.mealEntries.orderBy('date').toArray(), [])
@@ -48,7 +50,7 @@ export default function History() {
           const calPct = pct(entry.calories, goals.calories)
           const over = calPct > 100
           return (
-            <div key={entry.date} className="bg-white rounded-2xl p-4 shadow-sm">
+            <button key={entry.date} onClick={() => navigate('/', { state: { date: entry.date } })} className="w-full bg-white rounded-2xl p-4 shadow-sm text-left active:bg-gray-50 transition-colors">
               <div className="flex items-center justify-between mb-3">
                 <span className="font-semibold text-gray-700 capitalize">
                   {formatDateShort(entry.date)}
@@ -71,7 +73,7 @@ export default function History() {
                 <span>L: <span className="font-medium text-gray-700">{entry.fats}g</span></span>
                 {entry.notes && <span className="text-gray-400 truncate max-w-24">{entry.notes}</span>}
               </div>
-            </div>
+            </button>
           )
         })}
       </div>

@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Plus, Trash2, BookmarkCheck, Eraser, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { db } from '../db'
@@ -8,7 +9,10 @@ import MacroProgress from '../components/MacroProgress'
 import FoodSearch from '../components/FoodSearch'
 
 export default function Today() {
-  const [currentDate, setCurrentDate] = useState(today)
+  const location = useLocation()
+  const [currentDate, setCurrentDate] = useState<string>(
+    () => (location.state as { date?: string } | null)?.date ?? today()
+  )
   const [addingMeal, setAddingMeal] = useState<MealType | null>(null)
   const [saved, setSaved] = useState(false)
   const [editingEntry, setEditingEntry] = useState<MealEntry | null>(null)

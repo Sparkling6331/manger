@@ -366,8 +366,8 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
                 value={query}
                 onChange={e => setQuery(e.target.value)}
               />
-              <button onClick={onClose} className="text-gray-400 p-2 -mr-1 active:bg-gray-100 rounded-xl shrink-0">
-                <X size={20} />
+              <button onClick={onClose} className="shrink-0 text-sm font-medium text-green-600 active:text-green-800 px-1 py-2">
+                Annuler
               </button>
             </div>
 
