@@ -53,7 +53,6 @@ export interface MealEntry {
   fats: number;
   carbs: number;
   calories: number;
-  isExternal?: boolean;
 }
 
 export interface HistoryEntry {

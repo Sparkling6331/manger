@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Plus, Trash2, ExternalLink, BookmarkCheck, Eraser, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, Trash2, BookmarkCheck, Eraser, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { db } from '../db'
 import { today, formatDateLong, sumEntries, round } from '../utils'
 import { MEAL_META, MEAL_ORDER, type MealType, type MealEntry } from '../types'
@@ -66,10 +66,6 @@ export default function Today() {
     await db.mealEntries.delete(old.id!)
     await db.mealEntries.add({ ...data, date: currentDate, meal: old.meal })
     setReplacingEntry(null)
-  }
-
-  async function toggleExternal(entry: MealEntry) {
-    await db.mealEntries.update(entry.id!, { isExternal: !entry.isExternal })
   }
 
   async function handleSaveHistory() {
@@ -159,13 +155,6 @@ export default function Today() {
                     {entry.quantity}{entry.portionLabel ? ` ${entry.portionLabel}` : (entry.baseUnit === 1 ? 'u' : 'g')} · {Math.round(entry.calories)} kcal
                     {' · '}P:{entry.proteins}g G:{entry.carbs}g L:{entry.fats}g
                   </p>
-                </button>
-                <button
-                  onClick={() => toggleExternal(entry)}
-                  className={`p-2 rounded-xl ${entry.isExternal ? 'text-orange-400' : 'text-gray-200'}`}
-                  title="Repas extérieur"
-                >
-                  <ExternalLink size={15} />
                 </button>
                 <button
                   onClick={() => handleDelete(entry.id!)}
