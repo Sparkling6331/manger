@@ -55,7 +55,7 @@ interface ResultColProps {
 
 function ResultCol({ label, needs, onApply, active }: ResultColProps) {
   return (
-    <div className={`flex-1 rounded-xl p-3 border-2 transition-colors ${active ? 'border-green-500 bg-green-50' : 'border-gray-100 bg-gray-50'}`}>
+    <div className={`rounded-xl p-3 border-2 transition-colors ${active ? 'border-green-500 bg-green-50' : 'border-gray-100 bg-gray-50'}`}>
       <p className="text-xs font-semibold text-gray-500 mb-2 text-center">{label}</p>
       <div className="space-y-1.5 text-sm">
         <Row label="IMC" value={`${needs.imc}`} />
@@ -277,7 +277,7 @@ export default function Profile() {
           <p className="text-xs text-gray-400">
             Formule Mifflin-St Jeor × coefficient activité · P 15% · G 55/50% · L 30/35%
           </p>
-          <div className="flex gap-3">
+          <div className="flex flex-col gap-3">
             <ResultCol
               label={`Poids réel (${w} kg)`}
               needs={needsActual}
