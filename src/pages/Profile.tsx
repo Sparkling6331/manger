@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Save, Download, Upload, Check, Database, RefreshCw } from 'lucide-react'
+import { Save, Download, Upload, Check, Database, RefreshCw, List } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { db } from '../db'
 import { exportJSON } from '../utils'
 import { importOFFFile, type ImportProgress } from '../utils/offImport'
@@ -87,6 +88,7 @@ function Row({ label, value, highlight }: { label: string; value: string; highli
 }
 
 export default function Profile() {
+  const navigate = useNavigate()
   const profile = useLiveQuery(() => db.profile.get(1))
   const [form, setForm] = useState<Partial<UserProfile>>({})
   const [saved, setSaved] = useState(false)
@@ -374,6 +376,18 @@ export default function Profile() {
             <input type="file" accept=".gz,.csv" className="hidden" onChange={handleImportOFF} />
           </label>
         )}
+      </div>
+
+      {/* Food index */}
+      <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Index des aliments</h2>
+        <p className="text-xs text-gray-400">Consulter, modifier ou supprimer les aliments de la base locale.</p>
+        <button
+          onClick={() => navigate('/foods')}
+          className="w-full flex items-center justify-center gap-2 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-medium text-gray-700 active:bg-gray-100 transition-colors"
+        >
+          <List size={15} /> Gérer l'index des aliments
+        </button>
       </div>
 
       {/* Sync */}

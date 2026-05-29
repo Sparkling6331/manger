@@ -5,6 +5,7 @@ import History from './pages/History'
 import Recipes from './pages/Recipes'
 import Weight from './pages/Weight'
 import Profile from './pages/Profile'
+import Foods from './pages/Foods'
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
           <Route path="/recipes" element={<Recipes />} />
           <Route path="/weight" element={<Weight />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/foods" element={<Foods />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Plus, Trash2, ChevronLeft } from 'lucide-react'
+import { Plus, Trash2, ChevronLeft, Pencil } from 'lucide-react'
 import { db } from '../db'
 import { round } from '../utils'
 import FoodSearch from '../components/FoodSearch'
-import type { RecipeIngredient } from '../types'
+import type { Recipe, RecipeIngredient } from '../types'
 
 type View = 'list' | 'create'
 type PortionMode = 'servings' | 'weight'
@@ -16,6 +16,7 @@ interface DraftIngredient extends RecipeIngredient {
 
 export default function Recipes() {
   const [view, setView] = useState<View>('list')
+  const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null)
   const [recipeName, setRecipeName] = useState('')
   const [ingredients, setIngredients] = useState<DraftIngredient[]>([])
   const [portionMode, setPortionMode] = useState<PortionMode>('servings')
@@ -34,6 +35,45 @@ export default function Recipes() {
     }),
     { calories: 0, proteins: 0, carbs: 0, fats: 0 }
   )
+
+  function startCreate() {
+    setEditingRecipe(null)
+    setRecipeName('')
+    setIngredients([])
+    setPortionMode('servings')
+    setServings('1')
+    setTotalWeight('')
+    setView('create')
+  }
+
+  function startEdit(recipe: Recipe) {
+    setEditingRecipe(recipe)
+    setRecipeName(recipe.name)
+    const isServings = recipe.servings !== undefined && !recipe.totalWeight
+    setPortionMode(isServings ? 'servings' : 'weight')
+    setServings(String(recipe.servings ?? 1))
+    setTotalWeight(String(recipe.totalWeight ?? ''))
+    setIngredients(recipe.ingredients.map(ing => ({
+      name: ing.name,
+      quantity: ing.quantity,
+      baseUnit: 100,
+      proteins: ing.proteins,
+      fats: ing.fats,
+      carbs: ing.carbs,
+      calories: ing.calories,
+    })))
+    setView('create')
+  }
+
+  function resetCreate() {
+    setEditingRecipe(null)
+    setRecipeName('')
+    setIngredients([])
+    setPortionMode('servings')
+    setServings('1')
+    setTotalWeight('')
+    setView('list')
+  }
 
   function handleAddIngredient(data: {
     foodName: string
@@ -80,23 +120,24 @@ export default function Recipes() {
           fats: round(totals.fats * 100 / w!),
         }
 
-    await db.recipes.add({
+    const recipeIngredients: RecipeIngredient[] = ingredients.map(ing => ({
+      name: ing.name,
+      quantity: ing.quantity,
+      proteins: ing.proteins,
+      fats: ing.fats,
+      carbs: ing.carbs,
+      calories: ing.calories,
+    }))
+
+    const recipeData = {
       name,
       servings: isServings ? n! : undefined,
       totalWeight: !isServings ? w! : undefined,
-      ingredients: ingredients.map(ing => ({
-        name: ing.name,
-        quantity: ing.quantity,
-        proteins: ing.proteins,
-        fats: ing.fats,
-        carbs: ing.carbs,
-        calories: ing.calories,
-      })),
+      ingredients: recipeIngredients,
       per100g: perUnit,
-    })
+    }
 
-    await db.foods.add({
-      id: Date.now(),
+    const foodData = {
       name,
       unit: isServings ? 1 : 100,
       portionLabel: isServings ? 'part' : undefined,
@@ -104,31 +145,30 @@ export default function Recipes() {
       proteins: perUnit.proteins,
       carbs: perUnit.carbs,
       fats: perUnit.fats,
-      category: 'recipe',
-    })
+      category: 'recipe' as const,
+    }
 
-    setRecipeName('')
-    setIngredients([])
-    setPortionMode('servings')
-    setServings('1')
-    setTotalWeight('')
-    setView('list')
+    if (editingRecipe?.id) {
+      await db.recipes.update(editingRecipe.id, recipeData)
+      const food = await db.foods.where('name').equals(editingRecipe.name).and(f => f.category === 'recipe').first()
+      if (food?.id) {
+        await db.foods.update(food.id, foodData)
+      } else {
+        await db.foods.add({ id: Date.now(), ...foodData })
+      }
+    } else {
+      await db.recipes.add(recipeData)
+      await db.foods.add({ id: Date.now(), ...foodData })
+    }
+
+    resetCreate()
   }
 
-  async function handleDelete(recipe: { id?: number; name: string }) {
+  async function handleDelete(recipe: Recipe) {
     if (!window.confirm(`Supprimer la recette « ${recipe.name} » ?`)) return
     if (recipe.id) await db.recipes.delete(recipe.id)
     const food = await db.foods.where('name').equals(recipe.name).and(f => f.category === 'recipe').first()
     if (food?.id) await db.foods.delete(food.id)
-  }
-
-  function resetCreate() {
-    setRecipeName('')
-    setIngredients([])
-    setPortionMode('servings')
-    setServings('1')
-    setTotalWeight('')
-    setView('list')
   }
 
   if (view === 'create') {
@@ -141,7 +181,9 @@ export default function Recipes() {
           >
             <ChevronLeft size={22} />
           </button>
-          <h1 className="flex-1 text-base font-semibold text-gray-800">Nouvelle recette</h1>
+          <h1 className="flex-1 text-base font-semibold text-gray-800">
+            {editingRecipe ? 'Modifier la recette' : 'Nouvelle recette'}
+          </h1>
           <button
             onClick={handleSave}
             disabled={!recipeName.trim() || ingredients.length === 0}
@@ -220,9 +262,7 @@ export default function Recipes() {
               </div>
 
               <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                  Découpage
-                </p>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Découpage</p>
                 <div className="flex rounded-xl border border-gray-200 overflow-hidden mb-3">
                   <button
                     type="button"
@@ -301,7 +341,7 @@ export default function Recipes() {
       <div className="flex items-center justify-between pt-2">
         <h1 className="text-xl font-bold text-gray-800">Recettes</h1>
         <button
-          onClick={() => setView('create')}
+          onClick={startCreate}
           className="flex items-center gap-2 bg-green-600 text-white text-sm font-semibold px-4 py-2.5 rounded-2xl active:bg-green-700"
         >
           <Plus size={16} />
@@ -322,8 +362,8 @@ export default function Recipes() {
           const isServings = recipe.servings !== undefined && !recipe.totalWeight
           return (
             <div key={recipe.id} className="bg-white rounded-2xl p-4 shadow-sm">
-              <div className="flex items-start justify-between gap-2 mb-1">
-                <div className="min-w-0">
+              <div className="flex items-start gap-2 mb-1">
+                <div className="flex-1 min-w-0">
                   <p className="font-semibold text-gray-800 truncate">{recipe.name}</p>
                   <p className="text-sm text-gray-400">
                     {isServings
@@ -331,6 +371,12 @@ export default function Recipes() {
                       : `${recipe.totalWeight}g · ${recipe.per100g.calories} kcal/100g`}
                   </p>
                 </div>
+                <button
+                  onClick={() => startEdit(recipe)}
+                  className="p-2 text-gray-300 hover:text-blue-400 rounded-xl shrink-0"
+                >
+                  <Pencil size={15} />
+                </button>
                 <button
                   onClick={() => handleDelete(recipe)}
                   className="p-2 text-gray-300 hover:text-red-400 rounded-xl shrink-0"
