@@ -226,8 +226,8 @@ export default function Profile() {
       <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
         <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Données personnelles</h2>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="col-span-2">
+        <div className="grid gap-3" style={{ gridTemplateColumns: '3fr 2fr' }}>
+          <div>
             <label className="text-xs text-gray-500">Date de naissance</label>
             <input type="date" className="w-full border border-gray-200 rounded-xl px-3 py-3 mt-1 text-base"
               value={form.birthDate ?? ''} onChange={e => update({ birthDate: e.target.value })} />
@@ -240,6 +240,9 @@ export default function Profile() {
               <option value="female">Femme</option>
             </select>
           </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="text-xs text-gray-500">Poids actuel (kg)</label>
             <input type="number" inputMode="decimal" className="w-full border border-gray-200 rounded-xl px-3 py-3 mt-1 text-base"
