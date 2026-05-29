@@ -11,15 +11,17 @@ export default function App() {
   return (
     <div className="flex flex-col min-h-dvh bg-green-50">
       <main className="flex-1 overflow-y-auto pb-20">
-        <Routes>
-          <Route path="/" element={<Today />} />
-          <Route path="/history" element={<History />} />
-          <Route path="/recipes" element={<Recipes />} />
-          <Route path="/weight" element={<Weight />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/foods" element={<Foods />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <div className="max-w-[640px] mx-auto">
+          <Routes>
+            <Route path="/" element={<Today />} />
+            <Route path="/history" element={<History />} />
+            <Route path="/recipes" element={<Recipes />} />
+            <Route path="/weight" element={<Weight />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/foods" element={<Foods />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
       </main>
       <NavBar />
     </div>
