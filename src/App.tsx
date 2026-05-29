@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import NavBar from './components/NavBar'
 import Today from './pages/Today'
 import History from './pages/History'
+import Recipes from './pages/Recipes'
 import Weight from './pages/Weight'
 import Profile from './pages/Profile'
 
@@ -12,6 +13,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Today />} />
           <Route path="/history" element={<History />} />
+          <Route path="/recipes" element={<Recipes />} />
           <Route path="/weight" element={<Weight />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<Navigate to="/" replace />} />

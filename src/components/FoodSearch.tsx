@@ -87,7 +87,7 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
     if (!query.trim() || query.length < 2) return []
     const q = query.toLowerCase()
     const foodResults: FoodItem[] = (foods ?? [])
-      .filter(f => f.name.toLowerCase().includes(q))
+      .filter(f => f.name.toLowerCase().includes(q) && f.category !== 'recipe')
       .slice(0, 15)
       .map(f => ({ type: 'food' as const, data: f }))
     const recipeResults: FoodItem[] = (recipes ?? [])
@@ -100,7 +100,13 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
 
   function handleSelect(item: FoodItem) {
     setSelected(item)
-    setQuantity(String(item.type === 'food' ? item.data.unit : 100))
+    if (item.type === 'food') {
+      setQuantity(String(item.data.unit))
+    } else {
+      const r = item.data
+      const isServings = r.servings !== undefined && !r.totalWeight
+      setQuantity(isServings ? '1' : '100')
+    }
     setMode('quantity')
   }
 
@@ -119,8 +125,10 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
       })
     } else {
       const r = selected.data
-      const ratio = qty / 100
-      onAdd({ recipeId: r.id, foodName: r.name, quantity: qty, baseUnit: 100, proteins: round(r.per100g.proteins * ratio), fats: round(r.per100g.fats * ratio), carbs: round(r.per100g.carbs * ratio), calories: round(r.per100g.calories * ratio) })
+      const isServings = r.servings !== undefined && !r.totalWeight
+      const baseUnit = isServings ? 1 : 100
+      const ratio = isServings ? qty : qty / 100
+      onAdd({ recipeId: r.id, foodName: r.name, quantity: qty, baseUnit, proteins: round(r.per100g.proteins * ratio), fats: round(r.per100g.fats * ratio), carbs: round(r.per100g.carbs * ratio), calories: round(r.per100g.calories * ratio) })
     }
     onClose()
   }
@@ -243,7 +251,8 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
     if (!qty) return null
     if (selected.type === 'food') return calcNutrition(selected.data, qty)
     const r = selected.data
-    const ratio = qty / 100
+    const isServings = r.servings !== undefined && !r.totalWeight
+    const ratio = isServings ? qty : qty / 100
     return { proteins: round(r.per100g.proteins * ratio), fats: round(r.per100g.fats * ratio), carbs: round(r.per100g.carbs * ratio), calories: round(r.per100g.calories * ratio) }
   }, [selected, quantity])
 
@@ -366,7 +375,7 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
                 value={query}
                 onChange={e => setQuery(e.target.value)}
               />
-              <button onClick={onClose} className="shrink-0 text-sm font-medium text-green-600 active:text-green-800 px-1 py-2">
+              <button onClick={onClose} className="shrink-0 bg-green-600 active:bg-green-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl">
                 Annuler
               </button>
             </div>
@@ -390,7 +399,11 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
               {results.map((item, i) => {
                 const isRecipe = item.type === 'recipe'
                 const cal = isRecipe
-                  ? `${item.data.per100g.calories} kcal/100g`
+                  ? (() => {
+                      const r = item.data
+                      const isServings = r.servings !== undefined && !r.totalWeight
+                      return `${r.per100g.calories} kcal/${isServings ? 'part' : '100g'}`
+                    })()
                   : `${(item.data as Food).calories} kcal/${foodCalLabel(item.data as Food)}`
                 return (
                   <button
@@ -431,7 +444,12 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
               <p className="text-sm text-gray-400 text-center leading-relaxed">
                 {selected.type === 'food'
                   ? `${foodRefLabel(selected.data)} : ${selected.data.calories} kcal · P:${selected.data.proteins}g G:${selected.data.carbs}g L:${selected.data.fats}g`
-                  : `100g : ${selected.data.per100g.calories} kcal · P:${selected.data.per100g.proteins}g G:${selected.data.per100g.carbs}g L:${selected.data.per100g.fats}g`
+                  : (() => {
+                      const r = selected.data
+                      const isServings = r.servings !== undefined && !r.totalWeight
+                      const label = isServings ? '1 part' : '100g'
+                      return `${label} : ${r.per100g.calories} kcal · P:${r.per100g.proteins}g G:${r.per100g.carbs}g L:${r.per100g.fats}g`
+                    })()
                 }
               </p>
 
@@ -445,7 +463,9 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
                   onChange={e => setQuantity(e.target.value)}
                 />
                 <span className="text-lg text-gray-500 font-medium">
-                  {selected.type === 'food' ? foodUnitLabel(selected.data) : 'g'}
+                  {selected.type === 'food'
+                    ? foodUnitLabel(selected.data)
+                    : (selected.data.servings !== undefined && !selected.data.totalWeight ? 'part(s)' : 'g')}
                 </span>
               </div>
 

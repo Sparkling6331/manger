@@ -1,9 +1,10 @@
 import { NavLink } from 'react-router-dom'
-import { Home, BookOpen, Scale, User } from 'lucide-react'
+import { Home, BookOpen, Scale, User, ChefHat } from 'lucide-react'
 
 const tabs = [
   { to: '/', icon: Home, label: "Aujourd'hui" },
   { to: '/history', icon: BookOpen, label: 'Historique' },
+  { to: '/recipes', icon: ChefHat, label: 'Recettes' },
   { to: '/weight', icon: Scale, label: 'Poids' },
   { to: '/profile', icon: User, label: 'Profil' },
 ]
