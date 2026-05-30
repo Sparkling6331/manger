@@ -192,7 +192,19 @@ export default function Profile() {
       db.history.toArray(), db.weightEntries.toArray(), db.profile.toArray(),
     ])
     const date = new Date().toISOString().split('T')[0]
-    exportJSON({ version: 1, exportDate: date, foods, recipes, mealEntries, history, weightEntries, profile: profileData }, `manger-${date}.json`)
+    exportJSON({
+      version: 2,
+      exportDate: date,
+      foods,
+      recipes,
+      mealEntries,
+      history,
+      weightEntries,
+      profile: profileData,
+      settings: {
+        offResultsLimit: parseInt(localStorage.getItem(OFF_LIMIT_KEY) ?? String(OFF_LIMIT_DEFAULT)),
+      },
+    }, `manger-${date}.json`)
   }
 
   async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
@@ -202,18 +214,39 @@ export default function Profile() {
       e.target.value = ''
       return
     }
-    const text = await file.text()
-    const data = JSON.parse(text)
-    await db.transaction('rw', [db.foods, db.recipes, db.mealEntries, db.history, db.weightEntries, db.profile], async () => {
-      if (data.foods?.length) { await db.foods.clear(); await db.foods.bulkPut(data.foods) }
-      if (data.recipes?.length) { await db.recipes.clear(); await db.recipes.bulkPut(data.recipes) }
-      if (data.mealEntries?.length) { await db.mealEntries.clear(); await db.mealEntries.bulkPut(data.mealEntries) }
-      if (data.history?.length) { await db.history.clear(); await db.history.bulkPut(data.history) }
-      if (data.weightEntries?.length) { await db.weightEntries.clear(); await db.weightEntries.bulkPut(data.weightEntries) }
-      if (data.profile?.length) { await db.profile.clear(); await db.profile.bulkPut(data.profile) }
-    })
+    try {
+      const text = await file.text()
+      const data = JSON.parse(text)
+      if (typeof data !== 'object' || data === null) throw new Error('Format invalide')
+
+      await db.transaction('rw', [db.foods, db.recipes, db.mealEntries, db.history, db.weightEntries, db.profile], async () => {
+        if (Array.isArray(data.foods))        { await db.foods.clear();        await db.foods.bulkPut(data.foods) }
+        if (Array.isArray(data.recipes))      { await db.recipes.clear();      await db.recipes.bulkPut(data.recipes) }
+        if (Array.isArray(data.mealEntries))  { await db.mealEntries.clear();  await db.mealEntries.bulkPut(data.mealEntries) }
+        if (Array.isArray(data.history))      { await db.history.clear();      await db.history.bulkPut(data.history) }
+        if (Array.isArray(data.weightEntries)){ await db.weightEntries.clear(); await db.weightEntries.bulkPut(data.weightEntries) }
+        if (Array.isArray(data.profile))      { await db.profile.clear();      await db.profile.bulkPut(data.profile) }
+      })
+
+      if (typeof data.settings?.offResultsLimit === 'number') {
+        const limit = Math.min(50, Math.max(5, data.settings.offResultsLimit))
+        localStorage.setItem(OFF_LIMIT_KEY, String(limit))
+        setOffLimit(limit)
+      }
+
+      const counts = ([
+        Array.isArray(data.foods)        && `${data.foods.length} aliment(s)`,
+        Array.isArray(data.recipes)      && `${data.recipes.length} recette(s)`,
+        Array.isArray(data.mealEntries)  && `${data.mealEntries.length} entrée(s) de repas`,
+        Array.isArray(data.history)      && `${data.history.length} entrée(s) d'historique`,
+        Array.isArray(data.weightEntries)&& `${data.weightEntries.length} mesure(s) de poids`,
+      ] as (string | false)[]).filter(Boolean).join('\n')
+
+      alert(`Importé avec succès !\n\n${counts}`)
+    } catch (err) {
+      alert(`Erreur d'importation : ${err instanceof Error ? err.message : 'fichier invalide'}`)
+    }
     e.target.value = ''
-    alert('Importé avec succès !')
   }
 
   if (!profile) return <div className="p-4 text-gray-400">Chargement…</div>
@@ -397,7 +430,10 @@ export default function Profile() {
       <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
         <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Synchronisation Mac ↔ iPhone</h2>
         <p className="text-xs text-gray-400">
-          Toutes les données sont exportées (aliments, repas, historique, poids, profil).
+          Le fichier contient : index des aliments, recettes, repas, historique, poids, profil et réglages.
+        </p>
+        <p className="text-xs text-gray-400">
+          Non inclus : la base Open Food Facts locale (à ré-importer depuis fr.openfoodfacts.org/data si besoin).
         </p>
         <ol className="text-xs text-gray-400 list-decimal list-inside space-y-0.5">
           <li>Sur l’appareil source → <strong className="text-gray-600">Exporter</strong> → sauvegarder dans iCloud Drive</li>
