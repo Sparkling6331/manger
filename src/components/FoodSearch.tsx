@@ -402,7 +402,7 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
                   ? (() => {
                       const r = item.data
                       const isServings = r.servings !== undefined && !r.totalWeight
-                      return `${r.per100g.calories} kcal/${isServings ? 'part' : '100g'}`
+                      return `${Math.round(r.per100g.calories)} kcal/${isServings ? 'part' : '100g'}`
                     })()
                   : `${(item.data as Food).calories} kcal/${foodCalLabel(item.data as Food)}`
                 return (
@@ -440,41 +440,61 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
           <>
             <SheetHeader onBack={() => setMode('search')} title={selected.data.name} />
 
-            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
-              <p className="text-sm text-gray-400 text-center leading-relaxed">
-                {selected.type === 'food'
-                  ? `${foodRefLabel(selected.data)} : ${selected.data.calories} kcal · P:${selected.data.proteins}g G:${selected.data.carbs}g L:${selected.data.fats}g`
-                  : (() => {
-                      const r = selected.data
-                      const isServings = r.servings !== undefined && !r.totalWeight
-                      const label = isServings ? '1 part' : '100g'
-                      return `${label} : ${r.per100g.calories} kcal · P:${r.per100g.proteins}g G:${r.per100g.carbs}g L:${r.per100g.fats}g`
-                    })()
-                }
-              </p>
-
-              <div className="flex items-center justify-center gap-4">
-                <input
-                  autoFocus
-                  type="number"
-                  inputMode="decimal"
-                  className="w-36 border-2 border-gray-200 focus:border-green-400 rounded-2xl px-4 py-4 text-center text-4xl font-bold outline-none transition-colors"
-                  value={quantity}
-                  onChange={e => setQuantity(e.target.value)}
-                />
-                <span className="text-lg text-gray-500 font-medium">
+            <div className="flex-1 overflow-y-auto">
+              <div className="px-6 py-6 space-y-6">
+                <p className="text-sm text-gray-400 text-center leading-relaxed">
                   {selected.type === 'food'
-                    ? foodUnitLabel(selected.data)
-                    : (selected.data.servings !== undefined && !selected.data.totalWeight ? 'part(s)' : 'g')}
-                </span>
+                    ? `${foodRefLabel(selected.data)} : ${Math.round(selected.data.calories)} kcal · P:${round(selected.data.proteins)}g G:${round(selected.data.carbs)}g L:${round(selected.data.fats)}g`
+                    : (() => {
+                        const r = selected.data
+                        const isServings = r.servings !== undefined && !r.totalWeight
+                        const label = isServings ? '1 part' : '100g'
+                        return `${label} : ${Math.round(r.per100g.calories)} kcal · P:${round(r.per100g.proteins)}g G:${round(r.per100g.carbs)}g L:${round(r.per100g.fats)}g`
+                      })()
+                  }
+                </p>
+
+                <div className="flex items-center justify-center gap-4">
+                  <input
+                    autoFocus
+                    type="number"
+                    inputMode="decimal"
+                    className="w-36 border-2 border-gray-200 focus:border-green-400 rounded-2xl px-4 py-4 text-center text-4xl font-bold outline-none transition-colors"
+                    value={quantity}
+                    onChange={e => setQuantity(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleAddSelected()}
+                  />
+                  <span className="text-lg text-gray-500 font-medium">
+                    {selected.type === 'food'
+                      ? foodUnitLabel(selected.data)
+                      : (selected.data.servings !== undefined && !selected.data.totalWeight ? 'part(s)' : 'g')}
+                  </span>
+                </div>
+
+                {preview && (
+                  <MacroGrid cal={preview.calories} prot={preview.proteins} carbs={preview.carbs} fats={preview.fats} />
+                )}
               </div>
 
-              {preview && (
-                <MacroGrid cal={preview.calories} prot={preview.proteins} carbs={preview.carbs} fats={preview.fats} />
-              )}
+              {/* Boutons collés au contenu, pas en bas du sheet */}
+              <div
+                className="px-4 flex gap-3 border-t border-gray-100 pt-3"
+                style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
+              >
+                <button
+                  onClick={() => setMode('search')}
+                  className="px-5 py-4 rounded-2xl border border-gray-200 text-sm text-gray-600 font-medium active:bg-gray-50"
+                >
+                  Retour
+                </button>
+                <button
+                  onClick={handleAddSelected}
+                  className="flex-1 py-4 rounded-2xl bg-green-600 active:bg-green-700 text-white text-base font-semibold"
+                >
+                  Ajouter
+                </button>
+              </div>
             </div>
-
-            <ActionBar onBack={() => setMode('search')} onConfirm={handleAddSelected} />
           </>
         )}
 
