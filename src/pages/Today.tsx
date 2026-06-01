@@ -115,7 +115,7 @@ export default function Today() {
   }
 
   return (
-    <div className="p-4 space-y-4" {...(editingEntry ? {} : dateSwipe)}>
+    <div className="p-4 space-y-4" {...(editingEntry || addingMeal || replacingEntry ? {} : dateSwipe)}>
       {/* Header */}
       <div className="pt-2 flex items-center gap-2">
         <button
