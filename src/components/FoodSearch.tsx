@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useSwipe } from '../hooks/useSwipe'
+import { vibrate } from '../utils'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { X, Search, Plus, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import { db } from '../db'
@@ -140,6 +141,7 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
       const ratio = isServings ? qty : qty / 100
       onAdd({ recipeId: r.id, foodName: r.name, quantity: qty, baseUnit, proteins: round(r.per100g.proteins * ratio), fats: round(r.per100g.fats * ratio), carbs: round(r.per100g.carbs * ratio), calories: round(r.per100g.calories * ratio) })
     }
+    vibrate()
     onClose()
   }
 
@@ -250,6 +252,7 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
       carbs: round(manual.carbs * ratio),
       fats: round(manual.fats * ratio),
     })
+    vibrate()
     onClose()
   }
 

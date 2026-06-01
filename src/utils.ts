@@ -53,6 +53,10 @@ export function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+export function vibrate(ms = 30) {
+  navigator.vibrate?.(ms)
+}
+
 export function exportJSON(data: object, filename: string) {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);

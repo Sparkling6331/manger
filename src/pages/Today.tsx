@@ -2,9 +2,10 @@ import { useState, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useSwipe } from '../hooks/useSwipe'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Plus, Trash2, BookmarkCheck, Eraser, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, BookmarkCheck, Eraser, X, ChevronLeft, ChevronRight, Copy } from 'lucide-react'
 import { db } from '../db'
-import { today, formatDateLong, sumEntries, round } from '../utils'
+import { today, formatDateLong, sumEntries, round, vibrate } from '../utils'
+import SwipeableRow from '../components/SwipeableRow'
 import { MEAL_META, MEAL_ORDER, type MealType, type MealEntry } from '../types'
 import MacroProgress from '../components/MacroProgress'
 import FoodSearch from '../components/FoodSearch'
@@ -20,6 +21,7 @@ export default function Today() {
   const [editQty, setEditQty] = useState('')
   const [editMeal, setEditMeal] = useState<MealType>('breakfast')
   const [replacingEntry, setReplacingEntry] = useState<MealEntry | null>(null)
+  const [swipedId, setSwipedId] = useState<number | null>(null)
   const dateInputRef = useRef<HTMLInputElement>(null)
 
   const dateSwipe = useSwipe({
@@ -45,6 +47,19 @@ export default function Today() {
   async function handleAddEntry(meal: MealType, data: Omit<MealEntry, 'id' | 'date' | 'meal'>) {
     await db.mealEntries.add({ ...data, date: currentDate, meal })
     setAddingMeal(null)
+    vibrate()
+  }
+
+  async function handleCopyFromPrevious() {
+    const prev = new Date(currentDate)
+    prev.setDate(prev.getDate() - 1)
+    const prevDate = prev.toISOString().slice(0, 10)
+    const prevEntries = await db.mealEntries.where('date').equals(prevDate).toArray()
+    if (!prevEntries.length) { alert('Aucun repas enregistré la veille.'); return }
+    await db.mealEntries.bulkAdd(
+      prevEntries.map(({ id: _id, date: _date, ...rest }) => ({ ...rest, date: currentDate }))
+    )
+    vibrate()
   }
 
   async function handleDelete(id: number) {
@@ -71,6 +86,7 @@ export default function Today() {
       fats:     round(editingEntry.fats     * factor),
     })
     setEditingEntry(null)
+    vibrate()
   }
 
   async function handleReplaceEntry(old: MealEntry, data: Omit<MealEntry, 'id' | 'date' | 'meal'>) {
@@ -159,21 +175,24 @@ export default function Today() {
             </div>
 
             {mealEntries.map(entry => (
-              <div key={entry.id} className="flex items-center px-4 py-2.5 border-b border-gray-50 last:border-0 gap-2">
-                <button className="flex-1 min-w-0 text-left" onClick={() => openEdit(entry)}>
+              <SwipeableRow
+                key={entry.id}
+                isOpen={swipedId === entry.id}
+                onOpen={() => setSwipedId(entry.id!)}
+                onClose={() => setSwipedId(null)}
+                onDelete={() => handleDelete(entry.id!)}
+              >
+                <button
+                  className="flex-1 min-w-0 text-left"
+                  onClick={() => { setSwipedId(null); openEdit(entry) }}
+                >
                   <p className="text-sm text-gray-800 truncate">{entry.foodName}</p>
                   <p className="text-xs text-gray-400">
                     {entry.quantity}{entry.portionLabel ? ` ${entry.portionLabel}` : (entry.baseUnit === 1 ? 'u' : 'g')} · {Math.round(entry.calories)} kcal
                     {' · '}P:{entry.proteins}g G:{entry.carbs}g L:{entry.fats}g
                   </p>
                 </button>
-                <button
-                  onClick={() => handleDelete(entry.id!)}
-                  className="p-2 text-gray-300 hover:text-red-400 rounded-xl"
-                >
-                  <Trash2 size={15} />
-                </button>
-              </div>
+              </SwipeableRow>
             ))}
 
             <button
@@ -186,6 +205,17 @@ export default function Today() {
           </div>
         )
       })}
+
+      {/* Copy from previous day — shown only when day is empty */}
+      {(entries ?? []).length === 0 && (
+        <button
+          onClick={handleCopyFromPrevious}
+          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-dashed border-gray-200 text-sm text-gray-400 active:bg-gray-50 transition-colors"
+        >
+          <Copy size={16} />
+          Copier les repas de la veille
+        </button>
+      )}
 
       {/* Day actions */}
       {(entries ?? []).length > 0 && (
