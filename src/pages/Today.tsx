@@ -115,9 +115,9 @@ export default function Today() {
   }
 
   return (
-    <div className="p-4 space-y-4" {...(editingEntry || addingMeal || replacingEntry ? {} : dateSwipe)}>
+    <div className="p-4 space-y-4">
       {/* Header */}
-      <div className="pt-2 flex items-center gap-2">
+      <div className="pt-2 flex items-center gap-2" {...dateSwipe}>
         <button
           onClick={() => navigateDate(-1)}
           className="p-1.5 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
