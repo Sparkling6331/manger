@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
+import { useSwipe } from '../hooks/useSwipe'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Plus, Trash2, BookmarkCheck, Eraser, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { db } from '../db'
@@ -20,6 +21,12 @@ export default function Today() {
   const [editMeal, setEditMeal] = useState<MealType>('breakfast')
   const [replacingEntry, setReplacingEntry] = useState<MealEntry | null>(null)
   const dateInputRef = useRef<HTMLInputElement>(null)
+
+  const dateSwipe = useSwipe({
+    onSwipeLeft: () => navigateDate(1),
+    onSwipeRight: () => navigateDate(-1),
+  })
+  const editSwipe = useSwipe({ onSwipeRight: () => setEditingEntry(null) })
 
   const profile = useLiveQuery(() => db.profile.get(1))
   const entries = useLiveQuery(() => db.mealEntries.where('date').equals(currentDate).toArray(), [currentDate])
@@ -92,7 +99,7 @@ export default function Today() {
   }
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-4" {...(editingEntry ? {} : dateSwipe)}>
       {/* Header */}
       <div className="pt-2 flex items-center gap-2">
         <button
@@ -208,7 +215,7 @@ export default function Today() {
       {editingEntry && (
         <>
           <div className="fixed inset-0 z-[55] bg-black/40" onClick={() => setEditingEntry(null)} />
-          <div className="fixed z-[60] bottom-0 left-0 right-0 w-full bg-white rounded-t-3xl shadow-[0_-2px_24px_rgba(0,0,0,0.12)] sm:inset-auto sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-96 sm:rounded-2xl sm:shadow-xl">
+          <div className="fixed z-[60] bottom-0 left-0 right-0 w-full bg-white rounded-t-3xl shadow-[0_-2px_24px_rgba(0,0,0,0.12)] sm:inset-auto sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-96 sm:rounded-2xl sm:shadow-xl" {...editSwipe}>
             <div className="flex justify-center pt-3 sm:hidden">
               <div className="w-9 h-1 bg-gray-200 rounded-full" />
             </div>
