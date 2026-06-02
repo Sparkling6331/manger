@@ -368,8 +368,8 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
         {/* ── SEARCH ── */}
         {mode === 'search' && (
           <>
-            <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-100 shrink-0">
-              <div className="flex items-center gap-2 flex-1 bg-gray-100 rounded-xl px-3 py-2 min-w-0">
+            <div className="flex items-center gap-2 px-3 py-1.5 border-b border-gray-100 shrink-0">
+              <div className="flex items-center gap-2 flex-1 bg-gray-100 rounded-lg px-3 py-1.5 min-w-0">
                 <Search size={16} className="text-gray-400 shrink-0" />
                 <input
                   autoFocus
