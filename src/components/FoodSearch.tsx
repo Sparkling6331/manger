@@ -352,12 +352,9 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
       {/* Bottom sheet on mobile, centered modal on desktop */}
       <div className={[
         'fixed z-[60] bg-white flex flex-col overflow-hidden',
-        'bottom-0 left-0 right-0 rounded-t-3xl max-h-[92dvh]',
+        'bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[640px] rounded-t-3xl max-h-[92dvh]',
         'shadow-[0_-2px_24px_rgba(0,0,0,0.12)]',
-        'sm:inset-auto sm:top-1/2 sm:left-1/2',
-        'sm:-translate-x-1/2 sm:-translate-y-1/2',
-        'sm:w-full sm:max-w-lg sm:rounded-2xl sm:shadow-xl',
-        'sm:max-h-[90dvh]',
+        'sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:max-w-lg sm:rounded-2xl sm:shadow-xl sm:max-h-[90dvh]',
       ].join(' ')}>
 
         {/* Drag handle — mobile only */}
