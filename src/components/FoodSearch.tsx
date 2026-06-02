@@ -352,12 +352,12 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
       {/* Bottom sheet on mobile, centered modal on desktop */}
       <div className={[
         'fixed z-[60] bg-white flex flex-col overflow-hidden',
-        'bottom-0 left-0 right-0 w-full rounded-t-3xl h-[92dvh]',
+        'bottom-0 left-0 right-0 w-full rounded-t-3xl max-h-[92dvh]',
         'shadow-[0_-2px_24px_rgba(0,0,0,0.12)]',
         'sm:inset-auto sm:top-1/2 sm:left-1/2',
         'sm:-translate-x-1/2 sm:-translate-y-1/2',
         'sm:w-full sm:max-w-lg sm:rounded-2xl sm:shadow-xl',
-        'sm:h-auto sm:max-h-[90dvh]',
+        'sm:max-h-[90dvh]',
       ].join(' ')}>
 
         {/* Drag handle — mobile only */}
@@ -383,7 +383,7 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
               </button>
             </div>
 
-            <div className="overflow-y-auto overflow-x-hidden flex-1">
+            <div className="overflow-y-auto overflow-x-hidden flex-1 min-h-0">
               {query.length < 2 && (
                 <p className="text-center text-sm text-gray-400 py-12">Tapez au moins 2 caractères…</p>
               )}
@@ -443,7 +443,7 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
           <>
             <SheetHeader onBack={() => setMode('search')} title={selected.data.name} />
 
-            <div className="flex-1 overflow-y-auto overflow-x-hidden">
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
               <div className="px-6 py-6 space-y-6">
                 <p className="text-sm text-gray-400 text-center leading-relaxed">
                   {selected.type === 'food'
@@ -506,7 +506,7 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
           <>
             <SheetHeader onBack={() => setMode('search')} title="Saisie manuelle" />
 
-            <div className="overflow-y-auto overflow-x-hidden flex-1 px-4 py-5 space-y-5">
+            <div className="overflow-y-auto overflow-x-hidden flex-1 min-h-0 px-4 py-5 space-y-5">
               <div>
                 <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Nom</label>
                 <input
@@ -630,7 +630,7 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
           <>
             <SheetHeader onBack={() => setMode('manual')} title="Open Food Facts" />
 
-            <div className="overflow-y-auto overflow-x-hidden flex-1">
+            <div className="overflow-y-auto overflow-x-hidden flex-1 min-h-0">
               {offLoading && (
                 <div className="flex items-center justify-center gap-2 py-14 text-gray-400">
                   <Loader2 size={22} className="animate-spin" />
