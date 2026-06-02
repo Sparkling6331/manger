@@ -4,14 +4,20 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   background-color: #f0fdf4;
   font-family: system-ui, -apple-system, sans-serif;
   overscroll-behavior: none;
+  overflow-x: hidden;
 }
 
 #root {
   max-width: 640px;
   margin: 0 auto;
   min-height: 100dvh;
+  overflow-x: hidden;
 }
