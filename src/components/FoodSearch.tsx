@@ -368,17 +368,19 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
         {/* ── SEARCH ── */}
         {mode === 'search' && (
           <>
-            <div className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-100 shrink-0">
-              <Search size={19} className="text-gray-400 shrink-0" />
-              <input
-                autoFocus
-                type="text"
-                placeholder="Rechercher un aliment…"
-                className="flex-1 outline-none text-base min-w-0"
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-              />
-              <button onClick={onClose} className="shrink-0 bg-green-600 active:bg-green-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl">
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-100 shrink-0">
+              <div className="flex items-center gap-2 flex-1 bg-gray-100 rounded-xl px-3 py-2 min-w-0">
+                <Search size={16} className="text-gray-400 shrink-0" />
+                <input
+                  autoFocus
+                  type="text"
+                  placeholder="Rechercher un aliment…"
+                  className="flex-1 outline-none text-base bg-transparent min-w-0"
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                />
+              </div>
+              <button onClick={onClose} className="shrink-0 text-green-600 text-sm font-semibold px-2 py-2">
                 Annuler
               </button>
             </div>
