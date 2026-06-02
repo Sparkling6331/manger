@@ -50,7 +50,7 @@ export default function History() {
           const calPct = pct(entry.calories, goals.calories)
           const over = calPct > 100
           return (
-            <button key={entry.date} onClick={() => navigate('/', { state: { date: entry.date } })} className="w-full bg-white rounded-2xl p-4 shadow-sm text-left active:bg-gray-50 transition-colors">
+            <button key={entry.date} onClick={() => navigate('/', { state: { date: entry.date } })} className="card p-4 w-full text-left active:bg-gray-50 transition-colors">
               <div className="flex items-center justify-between mb-3">
                 <span className="font-semibold text-gray-700 capitalize">
                   {formatDateShort(entry.date)}

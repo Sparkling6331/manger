@@ -21,3 +21,56 @@ body {
   min-height: 100dvh;
   overflow-x: clip;
 }
+
+/* ── Component classes ─────────────────────────────────── */
+
+@layer components {
+
+  /* White rounded card */
+  .card {
+    @apply bg-white rounded-2xl shadow-sm;
+  }
+
+  /* Standard form field (input, select) */
+  .field {
+    @apply w-full border border-gray-200 rounded-xl px-3 py-3 mt-1 text-base;
+  }
+
+  /* Primary green action button */
+  .btn-primary {
+    @apply py-4 rounded-2xl bg-green-600 active:bg-green-700 text-white text-base font-semibold;
+  }
+
+  /* Secondary outline button */
+  .btn-secondary {
+    @apply py-4 rounded-2xl border border-gray-200 text-sm text-gray-600 font-medium active:bg-gray-50;
+  }
+
+  /* Dark translucent overlay behind sheets */
+  .backdrop {
+    @apply fixed inset-0 z-[55] bg-black/40;
+  }
+
+  /* Bottom sheet on mobile → centered modal on desktop */
+  .sheet {
+    @apply fixed z-[60] bg-white flex flex-col overflow-hidden;
+    @apply bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[640px];
+    @apply rounded-t-3xl max-h-[92dvh];
+    box-shadow: 0 -2px 24px rgba(0, 0, 0, 0.12);
+
+    @media (min-width: 640px) {
+      @apply bottom-auto top-1/2 -translate-y-1/2 max-w-lg rounded-2xl shadow-xl max-h-[90dvh];
+    }
+  }
+
+  /* Drag pill at the top of a sheet (mobile only) */
+  .drag-handle {
+    @apply flex justify-center pt-3 shrink-0 sm:hidden;
+  }
+
+  /* Small caps section title inside a card */
+  .section-label {
+    @apply text-xs font-semibold text-gray-400 uppercase tracking-wide;
+  }
+
+}

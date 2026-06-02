@@ -256,18 +256,18 @@ export default function Profile() {
       <h1 className="text-xl font-bold text-gray-800 pt-2">Mes besoins énergétiques</h1>
 
       {/* Personal data */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
-        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Données personnelles</h2>
+      <div className="card p-4 space-y-3">
+        <h2 className="section-label">Données personnelles</h2>
 
         <div className="grid gap-3" style={{ gridTemplateColumns: '3fr 2fr' }}>
           <div>
             <label className="text-xs text-gray-500">Date de naissance</label>
-            <input type="date" className="w-full border border-gray-200 rounded-xl px-3 py-3 mt-1 text-base"
+            <input type="date" className="field"
               value={form.birthDate ?? ''} onChange={e => update({ birthDate: e.target.value })} />
           </div>
           <div>
             <label className="text-xs text-gray-500">Genre</label>
-            <select className="w-full border border-gray-200 rounded-xl px-3 py-3 mt-1 text-base"
+            <select className="field"
               value={form.gender ?? 'male'} onChange={e => update({ gender: e.target.value as 'male' | 'female' })}>
               <option value="male">Homme</option>
               <option value="female">Femme</option>
@@ -278,24 +278,24 @@ export default function Profile() {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="text-xs text-gray-500">Poids actuel (kg)</label>
-            <input type="number" inputMode="decimal" className="w-full border border-gray-200 rounded-xl px-3 py-3 mt-1 text-base"
+            <input type="number" inputMode="decimal" className="field"
               value={form.currentWeight ?? ''} onChange={e => update({ currentWeight: parseFloat(e.target.value) })} />
           </div>
           <div>
             <label className="text-xs text-gray-500">Poids de référence (kg)</label>
-            <input type="number" inputMode="decimal" placeholder="masse maigre" className="w-full border border-gray-200 rounded-xl px-3 py-3 mt-1 text-base"
+            <input type="number" inputMode="decimal" placeholder="masse maigre" className="field"
               value={form.targetWeight ?? ''} onChange={e => update({ targetWeight: parseFloat(e.target.value) })} />
           </div>
           <div className="col-span-2">
             <label className="text-xs text-gray-500">Taille (cm)</label>
-            <input type="number" inputMode="numeric" className="w-full border border-gray-200 rounded-xl px-3 py-3 mt-1 text-base"
+            <input type="number" inputMode="numeric" className="field"
               value={form.height ?? ''} onChange={e => update({ height: parseInt(e.target.value) })} />
           </div>
         </div>
 
         <div>
           <label className="text-xs text-gray-500">Activité physique</label>
-          <select className="w-full border border-gray-200 rounded-xl px-3 py-3 mt-1 text-base"
+          <select className="field"
             value={form.activityLevel ?? 1.55} onChange={e => update({ activityLevel: parseFloat(e.target.value) })}>
             {ACTIVITY_OPTIONS.map(o => (
               <option key={o.value} value={o.value}>{o.label} ({o.value})</option>
@@ -308,8 +308,8 @@ export default function Profile() {
 
       {/* Results */}
       {needsActual && needsLean && (
-        <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Besoins calculés</h2>
+        <div className="card p-4 space-y-3">
+          <h2 className="section-label">Besoins calculés</h2>
           <p className="text-xs text-gray-400">
             Formule Mifflin-St Jeor × coefficient activité · P 15% · G 55/50% · L 30/35%
           </p>
@@ -331,8 +331,8 @@ export default function Profile() {
       )}
 
       {/* Manual goals override */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
-        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Objectifs journaliers (modifiables)</h2>
+      <div className="card p-4 space-y-3">
+        <h2 className="section-label">Objectifs journaliers (modifiables)</h2>
         <div className="grid grid-cols-2 gap-3">
           {(['calories', 'proteins', 'carbs', 'fats'] as const).map(key => (
             <div key={key}>
@@ -340,7 +340,7 @@ export default function Profile() {
                 {key === 'calories' ? 'Calories (kcal)' : key === 'proteins' ? 'Protéines (g)' : key === 'carbs' ? 'Glucides (g)' : 'Lipides (g)'}
               </label>
               <input type="number" inputMode="numeric"
-                className="w-full border border-gray-200 rounded-xl px-3 py-3 mt-1 text-base"
+                className="field"
                 value={form.goals?.[key] ?? ''}
                 onChange={e => update({ goals: { ...form.goals!, [key]: parseInt(e.target.value) } })} />
             </div>
@@ -359,8 +359,8 @@ export default function Profile() {
       </button>
 
       {/* OFF local database */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
-        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Base Open Food Facts locale</h2>
+      <div className="card p-4 space-y-3">
+        <h2 className="section-label">Base Open Food Facts locale</h2>
         {offMeta ? (
           <p className="text-xs text-gray-400">
             {offMeta.count.toLocaleString('fr-FR')} produits · mis à jour le {offMeta.date}
@@ -415,8 +415,8 @@ export default function Profile() {
       </div>
 
       {/* Food index */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
-        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Index des aliments</h2>
+      <div className="card p-4 space-y-3">
+        <h2 className="section-label">Index des aliments</h2>
         <p className="text-xs text-gray-400">Consulter, modifier ou supprimer les aliments de la base locale.</p>
         <button
           onClick={() => navigate('/foods')}
@@ -427,8 +427,8 @@ export default function Profile() {
       </div>
 
       {/* Sync */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
-        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Synchronisation Mac ↔ iPhone</h2>
+      <div className="card p-4 space-y-3">
+        <h2 className="section-label">Synchronisation Mac ↔ iPhone</h2>
         <p className="text-xs text-gray-400">
           Le fichier contient : index des aliments, recettes, repas, historique, poids, profil et réglages.
         </p>

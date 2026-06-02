@@ -146,7 +146,7 @@ export default function Today() {
       </div>
 
       {/* Macro summary */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm">
+      <div className="card p-4">
         <MacroProgress
           proteins={totals.proteins}
           fats={totals.fats}
@@ -163,7 +163,7 @@ export default function Today() {
         const mealCal = mealEntries.reduce((s, e) => s + e.calories, 0)
 
         return (
-          <div key={meal} className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div key={meal} className="card overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-50">
               <div className="flex items-center gap-2">
                 <span className="text-lg">{meta.icon}</span>
@@ -244,9 +244,9 @@ export default function Today() {
       {/* Edit entry modal */}
       {editingEntry && (
         <>
-          <div className="fixed inset-0 z-[55] bg-black/40" onClick={() => setEditingEntry(null)} />
-          <div className="fixed z-[60] bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-[0_-2px_24px_rgba(0,0,0,0.12)] sm:inset-auto sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-96 sm:rounded-2xl sm:shadow-xl" {...editSwipe}>
-            <div className="flex justify-center pt-3 sm:hidden">
+          <div className="backdrop" onClick={() => setEditingEntry(null)} />
+          <div className="sheet sm:max-w-sm" {...editSwipe}>
+            <div className="drag-handle">
               <div className="w-9 h-1 bg-gray-200 rounded-full" />
             </div>
             <div className="flex items-center gap-2 px-4 py-4 border-b border-gray-100">
@@ -309,16 +309,10 @@ export default function Today() {
                 </div>
               </div>
               <div className="flex gap-3">
-                <button
-                  onClick={() => { setReplacingEntry(editingEntry); setEditingEntry(null) }}
-                  className="flex-1 py-4 rounded-2xl border border-gray-200 text-sm text-gray-600 font-medium active:bg-gray-50"
-                >
+                <button onClick={() => { setReplacingEntry(editingEntry); setEditingEntry(null) }} className="btn-secondary flex-1">
                   Changer l'aliment
                 </button>
-                <button
-                  onClick={handleSaveEdit}
-                  className="flex-1 py-4 rounded-2xl bg-green-600 active:bg-green-700 text-white text-base font-semibold"
-                >
+                <button onClick={handleSaveEdit} className="btn-primary flex-1">
                   Enregistrer
                 </button>
               </div>

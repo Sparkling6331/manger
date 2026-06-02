@@ -136,7 +136,7 @@ export default function Foods() {
         </div>
 
         <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4 pb-8">
-          <div className="bg-white rounded-2xl p-4 shadow-sm space-y-4">
+          <div className="card p-4 space-y-4">
             <div>
               <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1.5">
                 Nom
@@ -173,7 +173,7 @@ export default function Foods() {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-4 shadow-sm space-y-4">
+          <div className="card p-4 space-y-4">
             <div>
               <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-2">
                 Type de portion

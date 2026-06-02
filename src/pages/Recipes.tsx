@@ -194,7 +194,7 @@ export default function Recipes() {
         </div>
 
         <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4 pb-8">
-          <div className="bg-white rounded-2xl p-4 shadow-sm">
+          <div className="card p-4">
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-2">
               Nom de la recette
             </label>
@@ -245,7 +245,7 @@ export default function Recipes() {
           </div>
 
           {ingredients.length > 0 && (
-            <div className="bg-white rounded-2xl p-4 shadow-sm space-y-4">
+            <div className="card p-4 space-y-4">
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Totaux recette</p>
               <div className="bg-green-50 rounded-2xl p-4 grid grid-cols-4 gap-1 text-center">
                 {[
@@ -361,7 +361,7 @@ export default function Recipes() {
         {(recipes ?? []).map(recipe => {
           const isServings = recipe.servings !== undefined && !recipe.totalWeight
           return (
-            <div key={recipe.id} className="bg-white rounded-2xl p-4 shadow-sm">
+            <div key={recipe.id} className="card p-4">
               <div className="flex items-start gap-2 mb-1">
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-gray-800 truncate">{recipe.name}</p>

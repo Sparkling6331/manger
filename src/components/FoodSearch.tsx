@@ -312,18 +312,8 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
         className="shrink-0 px-4 pt-3 border-t border-gray-100 flex gap-3 bg-white"
         style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
       >
-        <button
-          onClick={onBack}
-          className="px-5 py-4 rounded-2xl border border-gray-200 text-sm text-gray-600 font-medium active:bg-gray-50"
-        >
-          Retour
-        </button>
-        <button
-          onClick={onConfirm}
-          className="flex-1 py-4 rounded-2xl bg-green-600 active:bg-green-700 text-white text-base font-semibold"
-        >
-          Ajouter
-        </button>
+        <button onClick={onBack} className="btn-secondary px-5">Retour</button>
+        <button onClick={onConfirm} className="btn-primary flex-1">Ajouter</button>
       </div>
     )
   }
@@ -347,18 +337,12 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 z-[55] bg-black/40" onClick={onClose} />
+      <div className="backdrop" onClick={onClose} />
 
       {/* Bottom sheet on mobile, centered modal on desktop */}
-      <div className={[
-        'fixed z-[60] bg-white flex flex-col overflow-hidden',
-        'bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[640px] rounded-t-3xl max-h-[92dvh]',
-        'shadow-[0_-2px_24px_rgba(0,0,0,0.12)]',
-        'sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:max-w-lg sm:rounded-2xl sm:shadow-xl sm:max-h-[90dvh]',
-      ].join(' ')}>
+      <div className="sheet">
 
-        {/* Drag handle — mobile only */}
-        <div className="flex justify-center pt-3 shrink-0 sm:hidden">
+        <div className="drag-handle">
           <div className="w-9 h-1 bg-gray-200 rounded-full" />
         </div>
 
@@ -483,18 +467,8 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
                 className="px-4 flex gap-3 border-t border-gray-100 pt-3"
                 style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
               >
-                <button
-                  onClick={() => setMode('search')}
-                  className="px-5 py-4 rounded-2xl border border-gray-200 text-sm text-gray-600 font-medium active:bg-gray-50"
-                >
-                  Retour
-                </button>
-                <button
-                  onClick={handleAddSelected}
-                  className="flex-1 py-4 rounded-2xl bg-green-600 active:bg-green-700 text-white text-base font-semibold"
-                >
-                  Ajouter
-                </button>
+                <button onClick={() => setMode('search')} className="btn-secondary px-5">Retour</button>
+                <button onClick={handleAddSelected} className="btn-primary flex-1">Ajouter</button>
               </div>
             </div>
           </>
