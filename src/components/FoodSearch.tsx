@@ -1,5 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
-import { useSwipe } from '../hooks/useSwipe'
+import { useState, useMemo } from 'react'
 import { vibrate } from '../utils'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { X, Search, Plus, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
@@ -84,15 +83,6 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
 
   const foods = useLiveQuery(() => db.foods.toArray(), [])
   const recipes = useLiveQuery(() => db.recipes.toArray(), [])
-
-  const swipeBack = useCallback(() => {
-    if (mode === 'search') onClose()
-    else if (mode === 'quantity') setMode('search')
-    else if (mode === 'manual') setMode('search')
-    else if (mode === 'off') setMode('manual')
-  }, [mode, onClose])
-
-  const sheetSwipe = useSwipe({ onSwipeRight: swipeBack })
 
   const results = useMemo(() => {
     if (!query.trim() || query.length < 2) return []
@@ -360,18 +350,15 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
       <div className="fixed inset-0 z-[55] bg-black/40" onClick={onClose} />
 
       {/* Bottom sheet on mobile, centered modal on desktop */}
-      <div
-        className={[
-          'fixed z-[60] bg-white flex flex-col overflow-hidden',
-          'bottom-0 left-0 right-0 w-full rounded-t-3xl h-[92dvh]',
-          'shadow-[0_-2px_24px_rgba(0,0,0,0.12)]',
-          'sm:inset-auto sm:top-1/2 sm:left-1/2',
-          'sm:-translate-x-1/2 sm:-translate-y-1/2',
-          'sm:w-full sm:max-w-lg sm:rounded-2xl sm:shadow-xl',
-          'sm:h-auto sm:max-h-[90dvh]',
-        ].join(' ')}
-        {...sheetSwipe}
-      >
+      <div className={[
+        'fixed z-[60] bg-white flex flex-col overflow-hidden',
+        'bottom-0 left-0 right-0 w-full rounded-t-3xl h-[92dvh]',
+        'shadow-[0_-2px_24px_rgba(0,0,0,0.12)]',
+        'sm:inset-auto sm:top-1/2 sm:left-1/2',
+        'sm:-translate-x-1/2 sm:-translate-y-1/2',
+        'sm:w-full sm:max-w-lg sm:rounded-2xl sm:shadow-xl',
+        'sm:h-auto sm:max-h-[90dvh]',
+      ].join(' ')}>
 
         {/* Drag handle — mobile only */}
         <div className="flex justify-center pt-3 shrink-0 sm:hidden">
