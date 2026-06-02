@@ -10,7 +10,7 @@ import Foods from './pages/Foods'
 export default function App() {
   return (
     <div className="flex flex-col min-h-dvh bg-green-50">
-      <main className="flex-1 overflow-y-auto pb-20">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden pb-20">
         <div className="max-w-[640px] mx-auto">
           <Routes>
             <Route path="/" element={<Today />} />

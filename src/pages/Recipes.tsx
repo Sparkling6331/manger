@@ -193,7 +193,7 @@ export default function Recipes() {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-8">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4 pb-8">
           <div className="bg-white rounded-2xl p-4 shadow-sm">
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-2">
               Nom de la recette
