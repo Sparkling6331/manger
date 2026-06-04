@@ -166,11 +166,24 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
     setMode('manual')
   }
 
-  function handleAddManual() {
+  async function handleAddManual() {
     const qty = parseFloat(manualQty) || 100
     const ratio = qty / 100
+    const name = manual.name.trim() || 'Aliment personnalisé'
+
+    const foodId = await db.foods.add({
+      name,
+      unit: 100,
+      category: 'custom',
+      calories: manual.calories,
+      proteins: manual.proteins,
+      carbs: manual.carbs,
+      fats: manual.fats,
+    } as Food)
+
     onAdd({
-      foodName: manual.name.trim() || 'Aliment personnalisé',
+      foodId: foodId as number,
+      foodName: name,
       quantity: qty,
       baseUnit: 100,
       calories: round(manual.calories * ratio),
