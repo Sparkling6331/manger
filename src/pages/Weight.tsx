@@ -80,7 +80,11 @@ function WeightChart({ entries, targetWeight }: ChartProps) {
         : formatDateShort(e.date)
       xLabels.push({ i, text, anchor: 'end' })
     } else if (prevYear && year !== prevYear) {
-      xLabels.push({ i, text: year, anchor: 'middle' })
+      // Skip year markers too close to the edge labels to avoid overlap
+      const pos = i / (sorted.length - 1)
+      if (pos > 0.15 && pos < 0.85) {
+        xLabels.push({ i, text: year, anchor: 'middle' })
+      }
     }
   })
 
