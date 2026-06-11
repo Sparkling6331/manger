@@ -19,6 +19,7 @@ interface BarProps {
 function Bar({ label, value, goal, color }: BarProps) {
   const p = pct(value, goal)
   const over = p >= 100
+  const displayPct = goal > 0 ? Math.round((value / goal) * 100) : 0
   return (
     <div className="flex items-center gap-2">
       <span className="text-xs text-gray-500 w-16 shrink-0">{label}</span>
@@ -28,15 +29,17 @@ function Bar({ label, value, goal, color }: BarProps) {
           style={{ width: `${Math.min(p, 100)}%` }}
         />
       </div>
-      <span className={`text-xs font-medium w-20 text-right shrink-0 ${over ? 'text-orange-500' : 'text-gray-600'}`}>
-        {value}g / {goal}g
-      </span>
+      <div className="w-24 text-right shrink-0">
+        <span className={`text-xs font-bold ${over ? 'text-orange-500' : 'text-gray-700'}`}>{displayPct}%</span>
+        <span className="text-xs text-gray-400 ml-1">{value}/{goal}g</span>
+      </div>
     </div>
   )
 }
 
 export default function MacroProgress({ proteins, fats, carbs, calories, goals, compact }: Props) {
   const calPct = pct(calories, goals.calories)
+  const calDisplayPct = goals.calories > 0 ? Math.round((calories / goals.calories) * 100) : 0
   const calOver = calPct >= 100
 
   return (
@@ -46,6 +49,9 @@ export default function MacroProgress({ proteins, fats, carbs, calories, goals, 
         <span className={`text-lg font-bold ${calOver ? 'text-orange-500' : 'text-green-600'}`}>
           {Math.round(calories)}
           <span className="text-sm font-normal text-gray-400"> / {goals.calories} kcal</span>
+          <span className={`text-sm font-semibold ml-2 ${calOver ? 'text-orange-500' : 'text-green-600'}`}>
+            · {calDisplayPct}%
+          </span>
         </span>
       </div>
       {!compact && (

@@ -29,6 +29,10 @@ class MangerDB extends Dexie {
       profile: '++id',
       offProducts: '++id, nameLower',
     });
+    // v3: reverts broken primary-key migration — restores ++id schema
+    this.version(3).stores({
+      offProducts: '++id, nameLower',
+    }).upgrade(tx => tx.table('offProducts').clear());
   }
 }
 
