@@ -213,13 +213,19 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
       ratio = qty / 100
     }
 
-    if (fromOFF && manual.name.trim()) {
+    // Save the food to the local index (manual and OFF entries alike)
+    // so it shows up in future searches.
+    let savedFoodId: number | undefined
+    if (manual.name.trim()) {
       const name = manual.name.trim()
-      const existing = await db.foods.where('name').equals(name).count()
-      if (existing === 0) {
+      const existing = await db.foods.where('name').equals(name).first()
+      if (existing) {
+        savedFoodId = existing.id
+      } else {
         const portionRatio = pWeight / 100
+        savedFoodId = Date.now()
         await db.foods.add({
-          id: Date.now(),
+          id: savedFoodId,
           name,
           unit: isPortion ? 1 : 100,
           portionLabel: pLabel,
@@ -227,12 +233,13 @@ export default function FoodSearch({ onAdd, onClose }: Props) {
           proteins: isPortion ? round(manual.proteins * portionRatio) : manual.proteins,
           carbs: isPortion ? round(manual.carbs * portionRatio) : manual.carbs,
           fats: isPortion ? round(manual.fats * portionRatio) : manual.fats,
-          category: 'off',
+          category: fromOFF ? 'off' : 'custom',
         })
       }
     }
 
     onAdd({
+      foodId: savedFoodId,
       foodName: manual.name.trim() || 'Aliment personnalisé',
       quantity: qty,
       baseUnit,

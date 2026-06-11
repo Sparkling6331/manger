@@ -253,7 +253,7 @@ export default function Profile() {
 
   return (
     <div className="p-4 space-y-4 pb-8">
-      <h1 className="text-xl font-bold text-gray-800 pt-2">Mes besoins énergétiques</h1>
+      <h1 className="page-title pt-2">Mes besoins énergétiques</h1>
 
       {/* Personal data */}
       <div className="card p-4 space-y-3">

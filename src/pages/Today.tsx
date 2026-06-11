@@ -115,46 +115,49 @@ export default function Today() {
   }
 
   return (
-    <div className="p-4 space-y-4">
-      {/* Header */}
-      <div className="pt-2 flex items-center gap-2" {...dateSwipe}>
-        <button
-          onClick={() => navigateDate(-1)}
-          className="p-1.5 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-        >
-          <ChevronLeft size={20} />
-        </button>
-        <button
-          className="flex-1 text-left"
-          onClick={() => dateInputRef.current?.showPicker()}
-        >
-          <h1 className="text-xl font-bold text-gray-800 capitalize">{formatDateLong(currentDate)}</h1>
-        </button>
-        <input
-          ref={dateInputRef}
-          type="date"
-          className="sr-only"
-          value={currentDate}
-          onChange={e => e.target.value && setCurrentDate(e.target.value)}
-        />
-        <button
-          onClick={() => navigateDate(1)}
-          className="p-1.5 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-        >
-          <ChevronRight size={20} />
-        </button>
-      </div>
+    <div className="pb-4">
+      {/* Hero: date nav + daily summary on gradient */}
+      <header className="hero rounded-b-[28px] px-4 pt-3 pb-6">
+        <div className="flex items-center gap-2" {...dateSwipe}>
+          <button
+            onClick={() => navigateDate(-1)}
+            className="p-2 rounded-xl text-white/70 active:bg-white/10 transition-colors"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <button
+            className="flex-1 text-center"
+            onClick={() => dateInputRef.current?.showPicker()}
+          >
+            <h1 className="text-lg font-bold text-white capitalize">{formatDateLong(currentDate)}</h1>
+          </button>
+          <input
+            ref={dateInputRef}
+            type="date"
+            className="sr-only"
+            value={currentDate}
+            onChange={e => e.target.value && setCurrentDate(e.target.value)}
+          />
+          <button
+            onClick={() => navigateDate(1)}
+            className="p-2 rounded-xl text-white/70 active:bg-white/10 transition-colors"
+          >
+            <ChevronRight size={20} />
+          </button>
+        </div>
 
-      {/* Macro summary */}
-      <div className="card p-4">
-        <MacroProgress
-          proteins={totals.proteins}
-          fats={totals.fats}
-          carbs={totals.carbs}
-          calories={totals.calories}
-          goals={goals}
-        />
-      </div>
+        <div className="mt-4">
+          <MacroProgress
+            proteins={totals.proteins}
+            fats={totals.fats}
+            carbs={totals.carbs}
+            calories={totals.calories}
+            goals={goals}
+          />
+        </div>
+      </header>
+
+      <div className="px-4 pt-4 space-y-4">
 
       {/* Meal sections */}
       {MEAL_ORDER.map(meal => {
@@ -165,9 +168,9 @@ export default function Today() {
         return (
           <div key={meal} className="card overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-50">
-              <div className="flex items-center gap-2">
-                <span className="text-lg">{meta.icon}</span>
-                <span className="font-semibold text-gray-700">{meta.label}</span>
+              <div className="flex items-center gap-2.5">
+                <span className="w-9 h-9 rounded-xl bg-green-50 grid place-items-center text-base">{meta.icon}</span>
+                <span className="font-semibold text-gray-800">{meta.label}</span>
               </div>
               <span className="text-sm text-gray-400">
                 {mealCal > 0 ? `${Math.round(mealCal)} kcal` : '—'}
@@ -240,6 +243,7 @@ export default function Today() {
           </button>
         </div>
       )}
+      </div>
 
       {/* Edit entry modal */}
       {editingEntry && (

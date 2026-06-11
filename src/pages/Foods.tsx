@@ -253,7 +253,7 @@ export default function Foods() {
         >
           <ChevronLeft size={22} />
         </button>
-        <h1 className="flex-1 text-xl font-bold text-gray-800">Index des aliments</h1>
+        <h1 className="flex-1 page-title">Index des aliments</h1>
         <button
           onClick={openCreate}
           className="flex items-center gap-2 bg-green-600 text-white text-sm font-semibold px-4 py-2.5 rounded-2xl active:bg-green-700"

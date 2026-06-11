@@ -33,9 +33,44 @@ export default function History() {
   const seedFiltered = (seedHistory ?? []).filter(h => !liveDates.has(h.date))
   const merged = [...liveHistory, ...seedFiltered].sort((a, b) => b.date.localeCompare(a.date))
 
+  // Average over the 7 most recent recorded days
+  const last7 = merged.slice(0, 7)
+  const avg = last7.length >= 2
+    ? {
+        calories: Math.round(last7.reduce((s, e) => s + e.calories, 0) / last7.length),
+        proteins: Math.round(last7.reduce((s, e) => s + e.proteins, 0) / last7.length),
+        carbs:    Math.round(last7.reduce((s, e) => s + e.carbs,    0) / last7.length),
+        fats:     Math.round(last7.reduce((s, e) => s + e.fats,     0) / last7.length),
+      }
+    : null
+
   return (
     <div className="p-4 space-y-4">
-      <h1 className="text-xl font-bold text-gray-800 pt-2">Historique</h1>
+      <h1 className="page-title pt-2">Historique</h1>
+
+      {avg && (
+        <div className="card p-4">
+          <p className="section-label mb-3">Moyenne · {last7.length} derniers jours</p>
+          <div className="grid grid-cols-4 text-center">
+            <div>
+              <p className="text-lg font-bold text-green-600">{avg.calories}</p>
+              <p className="text-[11px] text-gray-400">kcal</p>
+            </div>
+            <div>
+              <p className="text-lg font-bold text-gray-800">{avg.proteins}<span className="text-xs font-normal text-gray-400">g</span></p>
+              <p className="text-[11px] text-gray-400 flex items-center justify-center gap-1"><i className="w-1.5 h-1.5 rounded-full bg-sky-400" />prot.</p>
+            </div>
+            <div>
+              <p className="text-lg font-bold text-gray-800">{avg.carbs}<span className="text-xs font-normal text-gray-400">g</span></p>
+              <p className="text-[11px] text-gray-400 flex items-center justify-center gap-1"><i className="w-1.5 h-1.5 rounded-full bg-amber-400" />gluc.</p>
+            </div>
+            <div>
+              <p className="text-lg font-bold text-gray-800">{avg.fats}<span className="text-xs font-normal text-gray-400">g</span></p>
+              <p className="text-[11px] text-gray-400 flex items-center justify-center gap-1"><i className="w-1.5 h-1.5 rounded-full bg-rose-400" />lip.</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {merged.length === 0 && (
         <div className="text-center py-16 text-gray-400">
@@ -68,9 +103,9 @@ export default function History() {
                 />
               </div>
               <div className="flex justify-between text-xs text-gray-500">
-                <span>P: <span className="font-medium text-gray-700">{entry.proteins}g</span></span>
-                <span>G: <span className="font-medium text-gray-700">{entry.carbs}g</span></span>
-                <span>L: <span className="font-medium text-gray-700">{entry.fats}g</span></span>
+                <span className="flex items-center gap-1.5"><i className="w-1.5 h-1.5 rounded-full bg-sky-400" />P <span className="font-medium text-gray-700">{entry.proteins}g</span></span>
+                <span className="flex items-center gap-1.5"><i className="w-1.5 h-1.5 rounded-full bg-amber-400" />G <span className="font-medium text-gray-700">{entry.carbs}g</span></span>
+                <span className="flex items-center gap-1.5"><i className="w-1.5 h-1.5 rounded-full bg-rose-400" />L <span className="font-medium text-gray-700">{entry.fats}g</span></span>
                 {entry.notes && <span className="text-gray-400 truncate max-w-24">{entry.notes}</span>}
               </div>
             </button>

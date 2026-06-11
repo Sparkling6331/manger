@@ -175,7 +175,7 @@ export default function Weight() {
   return (
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between pt-2">
-        <h1 className="text-xl font-bold text-gray-800">Poids</h1>
+        <h1 className="page-title">Poids</h1>
         <button
           onClick={() => setShowAdd(true)}
           className="flex items-center gap-1.5 bg-green-600 text-white text-sm font-semibold px-4 py-2.5 rounded-2xl"
