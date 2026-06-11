@@ -129,7 +129,7 @@ export default function Today() {
             className="flex-1 text-center"
             onClick={() => dateInputRef.current?.showPicker()}
           >
-            <h1 className="text-lg font-bold text-white capitalize">{formatDateLong(currentDate)}</h1>
+            <h1 className="text-lg font-extrabold text-white capitalize tracking-wide">{formatDateLong(currentDate)}</h1>
           </button>
           <input
             ref={dateInputRef}

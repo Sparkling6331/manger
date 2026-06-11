@@ -34,8 +34,8 @@ function CalorieRing({ calories, goal }: { calories: number; goal: number }) {
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-        <span className="text-2xl font-bold leading-none">{Math.abs(remaining)}</span>
-        <span className="text-[10px] text-white/75 mt-1">
+        <span className="text-2xl font-extrabold leading-none">{Math.abs(remaining)}</span>
+        <span className="text-[10px] font-semibold text-white/90 mt-1">
           {remaining >= 0 ? 'kcal restantes' : 'kcal dépassées'}
         </span>
       </div>
@@ -56,9 +56,9 @@ function MacroBar({ label, value, goal, color }: BarProps) {
   return (
     <div>
       <div className="flex items-baseline justify-between mb-1">
-        <span className="text-[11px] font-medium text-white/80">{label}</span>
-        <span className="text-[11px] font-semibold text-white">
-          {value}<span className="text-white/60 font-normal"> / {goal} g</span>
+        <span className="text-xs font-bold text-white">{label}</span>
+        <span className="text-xs font-bold text-white">
+          {value}<span className="text-white/75 font-semibold"> / {goal} g</span>
         </span>
       </div>
       <div className="h-1.5 rounded-full bg-white/20 overflow-hidden">
@@ -82,7 +82,7 @@ export default function MacroProgress({ proteins, fats, carbs, calories, goals }
           <MacroBar label="Lipides" value={fats} goal={goals.fats} color="#fda4af" />
         </div>
       </div>
-      <p className="text-center text-[11px] text-white/70 mt-3">
+      <p className="text-center text-xs font-semibold text-white/85 mt-3">
         {Math.round(calories)} kcal consommées · objectif {goals.calories} kcal
       </p>
     </div>
