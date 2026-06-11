@@ -6,7 +6,41 @@ interface Props {
   carbs: number
   calories: number
   goals: { proteins: number; fats: number; carbs: number; calories: number }
-  compact?: boolean
+}
+
+const RING_SIZE = 118
+const RING_STROKE = 9
+
+/* Circular calorie gauge — white on the gradient hero */
+function CalorieRing({ calories, goal }: { calories: number; goal: number }) {
+  const p = Math.min(pct(calories, goal), 100)
+  const over = calories > goal
+  const r = (RING_SIZE - RING_STROKE) / 2
+  const c = 2 * Math.PI * r
+  const remaining = Math.round(goal - calories)
+
+  return (
+    <div className="relative shrink-0" style={{ width: RING_SIZE, height: RING_SIZE }}>
+      <svg width={RING_SIZE} height={RING_SIZE} className="-rotate-90">
+        <circle
+          cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={r}
+          fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth={RING_STROKE}
+        />
+        <circle
+          cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={r}
+          fill="none" stroke={over ? '#fcd34d' : '#ffffff'} strokeWidth={RING_STROKE}
+          strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - p / 100)}
+          style={{ transition: 'stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1)' }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+        <span className="text-2xl font-bold leading-none">{Math.abs(remaining)}</span>
+        <span className="text-[10px] text-white/75 mt-1">
+          {remaining >= 0 ? 'kcal restantes' : 'kcal dépassées'}
+        </span>
+      </div>
+    </div>
+  )
 }
 
 interface BarProps {
@@ -16,57 +50,41 @@ interface BarProps {
   color: string
 }
 
-function Bar({ label, value, goal, color }: BarProps) {
-  const p = pct(value, goal)
-  const over = p >= 100
-  const displayPct = goal > 0 ? Math.round((value / goal) * 100) : 0
+function MacroBar({ label, value, goal, color }: BarProps) {
+  const p = Math.min(pct(value, goal), 100)
+  const over = value > goal
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-xs text-gray-500 w-16 shrink-0">{label}</span>
-      <div className="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
-        <div
-          className={`h-full rounded-full transition-all ${over ? 'bg-orange-400' : color}`}
-          style={{ width: `${Math.min(p, 100)}%` }}
-        />
+    <div>
+      <div className="flex items-baseline justify-between mb-1">
+        <span className="text-[11px] font-medium text-white/80">{label}</span>
+        <span className="text-[11px] font-semibold text-white">
+          {value}<span className="text-white/60 font-normal"> / {goal} g</span>
+        </span>
       </div>
-      <div className="w-24 text-right shrink-0">
-        <span className={`text-xs font-bold ${over ? 'text-orange-500' : 'text-gray-700'}`}>{displayPct}%</span>
-        <span className="text-xs text-gray-400 ml-1">{value}/{goal}g</span>
+      <div className="h-1.5 rounded-full bg-white/20 overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-500"
+          style={{ width: `${p}%`, backgroundColor: over ? '#fcd34d' : color }}
+        />
       </div>
     </div>
   )
 }
 
-export default function MacroProgress({ proteins, fats, carbs, calories, goals, compact }: Props) {
-  const calPct = pct(calories, goals.calories)
-  const calDisplayPct = goals.calories > 0 ? Math.round((calories / goals.calories) * 100) : 0
-  const calOver = calPct >= 100
-
+export default function MacroProgress({ proteins, fats, carbs, calories, goals }: Props) {
   return (
-    <div className="space-y-2">
-      <div className="flex items-baseline justify-between">
-        <span className="text-sm font-semibold text-gray-700">Calories</span>
-        <span className={`text-lg font-bold ${calOver ? 'text-orange-500' : 'text-green-600'}`}>
-          {Math.round(calories)}
-          <span className="text-sm font-normal text-gray-400"> / {goals.calories} kcal</span>
-          <span className={`text-sm font-semibold ml-2 ${calOver ? 'text-orange-500' : 'text-green-600'}`}>
-            · {calDisplayPct}%
-          </span>
-        </span>
-      </div>
-      {!compact && (
-        <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-all ${calOver ? 'bg-orange-400' : 'bg-green-500'}`}
-            style={{ width: `${Math.min(calPct, 100)}%` }}
-          />
+    <div>
+      <div className="flex items-center gap-5">
+        <CalorieRing calories={calories} goal={goals.calories} />
+        <div className="flex-1 space-y-2.5 min-w-0">
+          <MacroBar label="Protéines" value={proteins} goal={goals.proteins} color="#7dd3fc" />
+          <MacroBar label="Glucides" value={carbs} goal={goals.carbs} color="#fde68a" />
+          <MacroBar label="Lipides" value={fats} goal={goals.fats} color="#fda4af" />
         </div>
-      )}
-      <div className="space-y-1.5 pt-1">
-        <Bar label="Protéines" value={proteins} goal={goals.proteins} color="bg-blue-400" />
-        <Bar label="Glucides" value={carbs} goal={goals.carbs} color="bg-yellow-400" />
-        <Bar label="Lipides" value={fats} goal={goals.fats} color="bg-red-400" />
       </div>
+      <p className="text-center text-[11px] text-white/70 mt-3">
+        {Math.round(calories)} kcal consommées · objectif {goals.calories} kcal
+      </p>
     </div>
   )
 }

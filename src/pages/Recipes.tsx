@@ -339,7 +339,7 @@ export default function Recipes() {
   return (
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between pt-2">
-        <h1 className="text-xl font-bold text-gray-800">Recettes</h1>
+        <h1 className="page-title">Recettes</h1>
         <button
           onClick={startCreate}
           className="flex items-center gap-2 bg-green-600 text-white text-sm font-semibold px-4 py-2.5 rounded-2xl active:bg-green-700"
